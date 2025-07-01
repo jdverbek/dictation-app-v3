@@ -75,11 +75,11 @@ def transcribe():
     
     # Set appropriate prompt based on report type
     if verslag_type in ['raadpleging'] and 'anamnese' in request.form.get('raadpleging_part', '').lower():
-        # Only for anamnese - conversation between doctor and patient
+        # Only for anamnese - conversation between doctor and patient in West-Flemish
         whisper_prompt = "Dit is een conversatie tussen een arts en een patiënt in het West-Vlaams dialect over cardiologische klachten en onderzoeken."
     else:
-        # For all other types - doctor dictating to colleague/secretary
-        whisper_prompt = "Dit is een medische dictatie in het West-Vlaams dialect waarbij een cardioloog bevindingen dicteert aan een collega of secretaresse."
+        # For all other types - doctor dictating in standard medical Dutch
+        whisper_prompt = "Dit is een medische dictatie in het Nederlands waarbij een cardioloog bevindingen dicteert aan een collega of secretaresse."
     
     whisper_payload = {
         "model": "whisper-1", 
