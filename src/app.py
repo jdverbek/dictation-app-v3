@@ -25,6 +25,7 @@ if current_dir not in sys.path:
 from core.history_analyzer import HistoryAnalyzer
 from core.clinical_examiner import ClinicalExaminer
 from core.enhanced_audio_utils import EnhancedAudioProcessor, get_whisper_params_for_medical, handle_empty_transcription, get_error_solutions, get_medical_recording_tips
+from core.hallucination_detector import HallucinationDetector
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
@@ -138,6 +139,24 @@ def transcribe():
                 empty_feedback = handle_empty_transcription(metadata, file.filename)
                 return render_template('index.html', 
                                      transcript=empty_feedback,
+                                     error=True)
+            
+            # Step 3.5: Check for hallucinations
+            is_hallucination, reason, patterns = HallucinationDetector.detect_hallucination(raw_text)
+            
+            if is_hallucination:
+                app.logger.warning(f"Hallucination detected in transcription for {file.filename}")
+                app.logger.warning(f"Patterns found: {patterns}")
+                
+                # Get comprehensive feedback for hallucination
+                hallucination_feedback = HallucinationDetector.get_hallucination_feedback(raw_text)
+                
+                # Add transcription sample for debugging
+                sample_text = raw_text[:200] + "..." if len(raw_text) > 200 else raw_text
+                debug_info = f"\n\n**🔍 Gedetecteerde transcriptie (eerste 200 tekens):**\n\"{sample_text}\"\n"
+                
+                return render_template('index.html', 
+                                     transcript=f"{validation_msg}\n\n{hallucination_feedback}{debug_info}",
                                      error=True)
                 
         except Exception as transcribe_error:
