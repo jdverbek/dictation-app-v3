@@ -1,0 +1,32 @@
+services:
+  # Enhanced Medical Dictation App
+  - type: web
+    name: medical-dictation-enhanced
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT src.app:app
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false  # Set this manually in Render dashboard
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: false
+    healthCheckPath: /
+    
+  # Legacy version (optional - for backward compatibility)
+  - type: web
+    name: medical-dictation-legacy
+    env: python
+    plan: starter
+    buildCommand: pip install -r legacy/requirements.txt
+    startCommand: cd legacy && gunicorn --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: FLASK_ENV
+        value: production
+    healthCheckPath: /
+    # This service can be disabled by commenting it out
+
