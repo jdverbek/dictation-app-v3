@@ -24,6 +24,7 @@ if current_dir not in sys.path:
 # Import core modules
 from core.history_analyzer import HistoryAnalyzer
 from core.clinical_examiner import ClinicalExaminer
+from core.audio_utils import AudioProcessor, get_audio_processing_tips
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
@@ -87,32 +88,82 @@ def transcribe():
                              error=True)
 
     try:
-        # Step 1: Transcribe audio using Whisper
-        raw_text = transcribe_audio(file)
+        # Step 1: Process and validate audio file
+        processed_file, final_filename, processing_msg = AudioProcessor.prepare_audio_for_api(file, file.filename)
         
-        # Step 2: Correct transcription
+        if processed_file is None:
+            # Audio processing failed
+            tips = get_audio_processing_tips()
+            return render_template('index.html', 
+                                 transcript=f"{processing_msg}\n\n{tips}",
+                                 error=True)
+        
+        # Step 2: Transcribe audio using Whisper
+        raw_text = transcribe_audio(processed_file, final_filename)
+        
+        # Step 3: Correct transcription
         corrected = correct_transcription(raw_text)
         
-        # Step 3: Process based on type
+        # Step 4: Process based on type
         today = datetime.date.today().strftime('%d-%m-%Y')
         
+        # Add processing info to the result
+        processing_info = f"📁 {processing_msg}\n\n"
+        
         if verslag_type == 'raadpleging':
-            return process_raadpleging(corrected, raadpleging_part, today)
+            result = process_raadpleging(corrected, raadpleging_part, today)
+            # Add processing info to the transcript
+            if hasattr(result, 'data') and result.data:
+                original_transcript = result.data.get('transcript', '')
+                result.data['transcript'] = processing_info + original_transcript
+            return result
         elif verslag_type in ['TTE', 'TEE', 'ECG', 'EXERCISE_TEST', 'DEVICE_INTERROGATION', 'HOLTER']:
-            return process_clinical_examination(corrected, verslag_type, today)
+            result = process_clinical_examination(corrected, verslag_type, today)
+            if hasattr(result, 'data') and result.data:
+                original_transcript = result.data.get('transcript', '')
+                result.data['transcript'] = processing_info + original_transcript
+            return result
         else:
-            return process_original_format(corrected, verslag_type, today)
+            result = process_original_format(corrected, verslag_type, today)
+            if hasattr(result, 'data') and result.data:
+                original_transcript = result.data.get('transcript', '')
+                result.data['transcript'] = processing_info + original_transcript
+            return result
             
     except Exception as e:
         app.logger.error(f"Transcription error: {str(e)}")
+        error_msg = str(e)
+        
+        # Check if it's a file size error and provide helpful tips
+        if "413" in error_msg or "Payload Too Large" in error_msg:
+            tips = get_audio_processing_tips()
+            error_msg = f"⚠️ Bestand te groot voor OpenAI API\n\n{tips}"
+        else:
+            error_msg = f"⚠️ Fout bij verwerking: {error_msg}"
+            
         return render_template('index.html', 
-                             transcript=f"⚠️ Fout bij verwerking: {str(e)}",
+                             transcript=error_msg,
                              error=True)
 
-def transcribe_audio(file):
+def transcribe_audio(file_obj, filename):
     """Transcribe audio file using OpenAI Whisper"""
-    audio_stream = io.BytesIO(file.read())
-    files = {'file': (file.filename, audio_stream, file.content_type)}
+    # Reset file pointer to beginning
+    file_obj.seek(0)
+    
+    # Determine content type based on filename
+    file_ext = filename.lower().split('.')[-1] if '.' in filename else 'mp3'
+    content_type_map = {
+        'mp3': 'audio/mpeg',
+        'wav': 'audio/wav',
+        'webm': 'audio/webm',
+        'm4a': 'audio/mp4',
+        'aac': 'audio/aac',
+        'flac': 'audio/flac',
+        'ogg': 'audio/ogg'
+    }
+    content_type = content_type_map.get(file_ext, 'audio/mpeg')
+    
+    files = {'file': (filename, file_obj, content_type)}
     whisper_payload = {"model": "whisper-1", "language": "nl", "temperature": 0.0}
     headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
 
