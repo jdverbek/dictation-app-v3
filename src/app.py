@@ -42,7 +42,7 @@ history_analyzer = HistoryAnalyzer()
 clinical_examiner = ClinicalExaminer()
 
 def call_gpt(messages, temperature=0.3):
-    """Call OpenAI GPT API with error handling"""
+    """Call OpenAI GPT API with error handling and extended timeout for large texts"""
     headers = {
         "Authorization": f"Bearer {OPENAI_API_KEY}",
         "Content-Type": "application/json"
@@ -53,10 +53,26 @@ def call_gpt(messages, temperature=0.3):
         "messages": messages
     }
     
+    # Calculate timeout based on message length
+    total_chars = sum(len(msg.get('content', '')) for msg in messages)
+    if total_chars > 5000:
+        timeout = 300  # 5 minutes for large texts
+    elif total_chars > 2000:
+        timeout = 180  # 3 minutes for medium texts
+    else:
+        timeout = 120  # 2 minutes for normal texts
+    
     try:
-        response = requests.post(GPT_URL, headers=headers, json=data, timeout=90)
+        app.logger.info(f"Calling GPT API with {total_chars} characters (timeout: {timeout}s)")
+        response = requests.post(GPT_URL, headers=headers, json=data, timeout=timeout)
         response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"]
+        result = response.json()["choices"][0]["message"]["content"]
+        app.logger.info(f"GPT API response received successfully")
+        return result
+    except requests.exceptions.Timeout:
+        error_msg = f"GPT API timeout after {timeout} seconds for {total_chars} characters"
+        app.logger.error(error_msg)
+        raise Exception(error_msg)
     except requests.exceptions.RequestException as e:
         app.logger.error(f"OpenAI API error: {str(e)}")
         raise
