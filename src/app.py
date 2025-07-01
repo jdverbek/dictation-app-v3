@@ -26,6 +26,7 @@ from core.history_analyzer import HistoryAnalyzer
 from core.clinical_examiner import ClinicalExaminer
 from core.enhanced_audio_utils import EnhancedAudioProcessor, get_whisper_params_for_medical, handle_empty_transcription, get_error_solutions, get_medical_recording_tips
 from core.hallucination_detector import HallucinationDetector
+from core.audio_utils import get_audio_processing_tips
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
@@ -362,15 +363,34 @@ def process_clinical_examination(corrected_text, investigation_type, today):
 
 def process_general_clinical_examination(corrected_text, today):
     """Process general clinical examination when specific type not detected"""
-    # Implementation similar to enhanced app but simplified for space
-    # This would use the general template processing
-    pass
+    # Use general examination analysis
+    examination_result = clinical_examiner.analyze_examination(corrected_text)
+    
+    return render_template('index.html',
+                         transcript=examination_result.formatted_report,
+                         analysis_type="🔬 Algemeen Onderzoek",
+                         confidence_info=f"Betrouwbaarheid: {len(examination_result.confidence_scores)} velden geëxtraheerd",
+                         success=True)
 
 def process_original_format(corrected_text, verslag_type, today):
     """Process using original format for backward compatibility"""
-    # Implementation of original templates for TTE, TEE, consult, etc.
-    # This maintains backward compatibility
-    pass
+    # For backward compatibility, use a simple template
+    formatted_text = f"""
+Datum: {today}
+Type: {verslag_type.upper()}
+
+Transcriptie:
+{corrected_text}
+
+---
+Verwerkt met Enhanced Medical Dictation App v2.0.0
+"""
+    
+    return render_template('index.html',
+                         transcript=formatted_text,
+                         analysis_type=f"📝 {verslag_type.title()}",
+                         confidence_info="Basis transcriptie voltooid",
+                         success=True)
 
 # API Endpoints
 @app.route('/api/analyze_history', methods=['POST'])
