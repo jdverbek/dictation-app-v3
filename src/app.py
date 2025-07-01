@@ -15,6 +15,12 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Add current directory to path for imports
+import sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
 # Import core modules
 from core.history_analyzer import HistoryAnalyzer
 from core.clinical_examiner import ClinicalExaminer
