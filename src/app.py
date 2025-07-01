@@ -23,7 +23,9 @@ if current_dir not in sys.path:
 
 # Import core modules
 from core.history_analyzer import HistoryAnalyzer
+from core.enhanced_history_analyzer import EnhancedHistoryAnalyzer
 from core.clinical_examiner import ClinicalExaminer
+from core.enhanced_medical_processor import EnhancedMedicalProcessor
 from core.enhanced_audio_utils import EnhancedAudioProcessor, get_whisper_params_for_medical, handle_empty_transcription, get_error_solutions, get_medical_recording_tips
 from core.hallucination_detector import HallucinationDetector
 from core.audio_utils import get_audio_processing_tips
@@ -41,7 +43,9 @@ GPT_URL = "https://api.openai.com/v1/chat/completions"
 
 # Initialize analysis systems
 history_analyzer = HistoryAnalyzer()
+enhanced_history_analyzer = EnhancedHistoryAnalyzer()
 clinical_examiner = ClinicalExaminer()
+enhanced_medical_processor = EnhancedMedicalProcessor()
 
 def call_gpt(messages, temperature=0.3):
     """Call OpenAI GPT API with error handling and extended timeout for large texts"""
@@ -313,14 +317,14 @@ def process_raadpleging(corrected_text, part_type, today):
     """Process enhanced raadpleging with two-part flow"""
     
     if part_type == 'history':
-        # Part 1: Intelligent history collection
-        analysis = history_analyzer.analyze_conversation(corrected_text)
-        formatted_history = history_analyzer.format_structured_output(analysis)
+        # Part 1: Enhanced intelligent history collection
+        analysis = enhanced_history_analyzer.analyze_conversation(corrected_text)
+        formatted_history = enhanced_history_analyzer.format_structured_output(analysis)
         
         return render_template('index.html', 
                              transcript=formatted_history,
-                             analysis_type="🧠 Anamnese Analyse",
-                             confidence_info=f"Betrouwbaarheid: {len(analysis.chief_complaints)} klachten geïdentificeerd",
+                             analysis_type="🧠 Enhanced Anamnese Analyse",
+                             confidence_info=f"Betrouwbaarheid: {len(analysis.chief_complaints)} klachten geïdentificeerd, {len(analysis.relevant_history)} voorgeschiedenis items",
                              success=True)
     
     elif part_type == 'examination':
@@ -342,23 +346,31 @@ def process_raadpleging(corrected_text, part_type, today):
                              error=True)
 
 def process_clinical_examination(corrected_text, investigation_type, today):
-    """Process specific clinical examinations"""
+    """Process clinical examination using enhanced medical processor"""
+    
+    # Map investigation types to enhanced processor types
     type_mapping = {
         'TTE': 'TTE',
-        'TEE': 'TEE', 
+        'TEE': 'TTE',  # Use TTE template for TEE as well
         'ECG': 'ECG',
         'EXERCISE_TEST': 'EXERCISE_TEST',
-        'DEVICE_INTERROGATION': 'DEVICE_INTERROGATION',
-        'HOLTER': 'HOLTER'
+        'DEVICE_INTERROGATION': 'EXERCISE_TEST',  # Use exercise template for device interrogation
+        'HOLTER': 'ECG'  # Use ECG template for Holter
     }
     
-    clinical_type = type_mapping.get(investigation_type, investigation_type)
-    examination_result = clinical_examiner.analyze_examination(corrected_text, clinical_type)
+    processor_type = type_mapping.get(investigation_type, 'TTE')
+    
+    # Use enhanced medical processor for better formatting
+    formatted_report = enhanced_medical_processor.process_transcription(corrected_text, processor_type, today)
+    processing_summary = enhanced_medical_processor.get_processing_summary(
+        enhanced_medical_processor._extract_findings(corrected_text, processor_type), 
+        processor_type
+    )
     
     return render_template('index.html',
-                         transcript=examination_result.formatted_report,
-                         analysis_type=f"🔬 Onderzoek: {investigation_type}",
-                         confidence_info=f"Betrouwbaarheid: {len(examination_result.confidence_scores)} velden geëxtraheerd",
+                         transcript=formatted_report,
+                         analysis_type=f"🔬 {investigation_type}",
+                         confidence_info=processing_summary,
                          success=True)
 
 def process_general_clinical_examination(corrected_text, today):
@@ -373,9 +385,24 @@ def process_general_clinical_examination(corrected_text, today):
                          success=True)
 
 def process_original_format(corrected_text, verslag_type, today):
-    """Process using original format for backward compatibility"""
-    # For backward compatibility, use a simple template
-    formatted_text = f"""
+    """Process using enhanced templates for better medical language"""
+    
+    # Use enhanced processor for consult types
+    if verslag_type in ['consult', 'spoedconsult']:
+        formatted_report = enhanced_medical_processor.process_transcription(corrected_text, 'CONSULT', today)
+        processing_summary = enhanced_medical_processor.get_processing_summary(
+            enhanced_medical_processor._extract_findings(corrected_text, 'CONSULT'), 
+            'CONSULT'
+        )
+        
+        return render_template('index.html',
+                             transcript=formatted_report,
+                             analysis_type=f"👨‍⚕️ {verslag_type.title()}",
+                             confidence_info=processing_summary,
+                             success=True)
+    else:
+        # For other types, use simple template
+        formatted_text = f"""
 Datum: {today}
 Type: {verslag_type.upper()}
 
@@ -385,12 +412,12 @@ Transcriptie:
 ---
 Verwerkt met Enhanced Medical Dictation App v2.0.0
 """
-    
-    return render_template('index.html',
-                         transcript=formatted_text,
-                         analysis_type=f"📝 {verslag_type.title()}",
-                         confidence_info="Basis transcriptie voltooid",
-                         success=True)
+        
+        return render_template('index.html',
+                             transcript=formatted_text,
+                             analysis_type=f"📝 {verslag_type.title()}",
+                             confidence_info="Basis transcriptie voltooid",
+                             success=True)
 
 # API Endpoints
 @app.route('/api/analyze_history', methods=['POST'])
