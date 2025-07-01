@@ -111,9 +111,25 @@ Oplossingen:
 
 Probeer opnieuw met verbeterde audio.""")
 
-        # 2) Corrigeer transcriptie in medisch Nederlands
+        # 2) Corrigeer transcriptie en interpreteer intuïtief dictaat
         corrected = call_gpt([
-            {"role": "system", "content": "Corrigeer deze transcriptie in correct medisch Nederlands. Behoud alle genoemde cijfers en metingen exact."},
+            {"role": "system", "content": """Corrigeer deze transcriptie en interpreteer het intuïtieve dictaat:
+
+BELANGRIJK: Dit is een intuïtief dictaat van een arts, wat betekent:
+- Niet noodzakelijk in de juiste volgorde
+- In eigen woorden van de arts
+- Mogelijk met correcties tijdens het dictaat ("nee, eigenlijk...", "sorry, ik bedoel...")
+- Kan heen en weer springen tussen onderwerpen
+- Gebruikt informele medische taal
+
+Uw taak:
+1. Corrigeer transcriptiefouten
+2. Interpreteer correcties en herzieningen in het dictaat
+3. Behoud alle genoemde cijfers en metingen exact
+4. Zet informele taal om naar correcte medische terminologie
+5. Organiseer de informatie logisch (maar verander geen cijfers!)
+
+Geef een gestructureerde, gecorrigeerde versie terug."""},
             {"role": "user",   "content": raw_text}
         ])
 
@@ -123,7 +139,21 @@ Probeer opnieuw met verbeterde audio.""")
         # 3) Kies juiste template
         if verslag_type == 'TTE':
             template_instruction = f"""
-Gebruik uitsluitend onderstaand TTE-verslagformat. Vul alleen velden in die expliciet genoemd zijn. Vermijd incomplete zinnen. Indien waarden niet vermeld zijn, laat ze weg en herschrijf de zin grammaticaal correct. Beschrijf structuren als 'normaal' indien niet besproken. GEEN voorgeschiedenis, context of advies:
+BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat de informatie:
+- Niet in de juiste volgorde staat
+- In informele bewoordingen kan zijn
+- Correcties kan bevatten
+- Heen en weer kan springen tussen onderwerpen
+
+Uw taak: Organiseer dit intuïtieve dictaat in het exacte TTE-format hieronder.
+
+REGELS:
+- Vul alleen velden in die expliciet genoemd zijn in het dictaat
+- Laat velden weg indien niet vermeld en herschrijf zinnen grammaticaal correct
+- Behoud alle cijfers en metingen exact zoals gedicteerd
+- Interpreteer informele taal naar correcte medische terminologie
+- Beschrijf structuren als 'normaal' indien niet besproken
+- GEEN voorgeschiedenis, context of advies
 
 TTE op {today}:
 - Linker ventrikel: (...)troof met EDD (...) mm, IVS (...) mm, PW (...) mm. Globale functie: (goed/licht gedaald/matig gedaald/ernstig gedaald) met LVEF (...)% (geschat/monoplane/biplane).
@@ -154,7 +184,21 @@ Beleid:
 """
         elif verslag_type == 'TEE':
             template_instruction = f"""
-Gebruik uitsluitend onderstaand TEE-verslagformat. Vul alleen expliciet genoemde zaken in. Laat velden weg indien niet vermeld en herschrijf zinnen grammaticaal correct. Gebruik defaults enkel voor structuren die niet besproken zijn. GEEN voorgeschiedenis of advies:
+BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat de informatie:
+- Niet in de juiste volgorde staat
+- In informele bewoordingen kan zijn
+- Correcties kan bevatten
+- Heen en weer kan springen tussen onderwerpen
+
+Uw taak: Organiseer dit intuïtieve dictaat in het exacte TEE-format hieronder.
+
+REGELS:
+- Vul alleen expliciet genoemde zaken in uit het dictaat
+- Laat velden weg indien niet vermeld en herschrijf zinnen grammaticaal correct
+- Behoud alle cijfers en metingen exact zoals gedicteerd
+- Interpreteer informele taal naar correcte medische terminologie
+- Gebruik defaults enkel voor structuren die niet besproken zijn
+- GEEN voorgeschiedenis of advies
 
 Onderzoeksdatum: {today}
 Bevindingen: TEE ONDERZOEK : 3D TEE met (Philips/GE) toestel
@@ -184,8 +228,19 @@ VERSLAG:
 """
         elif verslag_type == 'spoedconsult':
             template_instruction = f"""
-Schrijf een spoedconsult verslag in **exacte** volgende structuur.
-Vervang alleen zinnen **zonder** cijfers door grammaticaal correcte tekst, laat alle andere zinnen onaangeroerd:
+BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat de informatie:
+- Niet in de juiste volgorde staat
+- In informele bewoordingen kan zijn
+- Correcties kan bevatten
+- Heen en weer kan springen tussen onderwerpen
+
+Uw taak: Organiseer dit intuïtieve dictaat in het exacte spoedconsult-format hieronder.
+
+REGELS:
+- Interpreteer het dictaat en organiseer in de juiste structuur
+- Behoud alle cijfers en metingen exact zoals gedicteerd
+- Laat secties weg indien geen data beschikbaar
+- Zet informele taal om naar correcte medische terminologie
 
 Spoedconsult cardiologie op {today}
 
@@ -217,13 +272,22 @@ Beleid:
 - Medicatie: (...)
 - Bijkomende investigaties: (...)
 - Opvolging: (...)
-
-Laat secties weg indien **geen** data; herschrijf alleen zinnen zonder cijfers; behoud alle numerieke data ongewijzigd
 """
         else:  # raadpleging or consult
             template_instruction = f"""
-Schrijf een medisch verslag in **exacte** volgende structuur.
-Vervang alleen zinnen **zonder** cijfers door grammaticaal correcte tekst, laat alle andere zinnen onaangeroerd:
+BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat de informatie:
+- Niet in de juiste volgorde staat
+- In informele bewoordingen kan zijn
+- Correcties kan bevatten
+- Heen en weer kan springen tussen onderwerpen
+
+Uw taak: Organiseer dit intuïtieve dictaat in het exacte medische verslag-format hieronder.
+
+REGELS:
+- Interpreteer het dictaat en organiseer in de juiste structuur
+- Behoud alle cijfers en metingen exact zoals gedicteerd
+- Laat secties weg indien geen data beschikbaar
+- Zet informele taal om naar correcte medische terminologie
 
 Antecedenten
 Persoonlijke antecedenten:
@@ -292,8 +356,6 @@ Beleid:
 - Medicatie ongewijzigd/gewijzigd: …
 - Bijkomende investigaties: …
 - Controle over … maand
-
-Laat secties weg indien **geen** data; herschrijf alleen zinnen zonder cijfers; behoud alle numerieke data ongewijzigd
 """
         
         # 4) Genereer verslag
