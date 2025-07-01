@@ -351,7 +351,7 @@ def process_clinical_examination(corrected_text, investigation_type, today):
     # Map investigation types to enhanced processor types
     type_mapping = {
         'TTE': 'TTE',
-        'TEE': 'TTE',  # Use TTE template for TEE as well
+        'TEE': 'TEE',  # Use separate TEE template
         'ECG': 'ECG',
         'EXERCISE_TEST': 'EXERCISE_TEST',
         'DEVICE_INTERROGATION': 'EXERCISE_TEST',  # Use exercise template for device interrogation

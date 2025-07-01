@@ -31,8 +31,68 @@ class EnhancedClinicalTemplates:
                 ],
                 'smart_defaults': {
                     'lv_function': 'normale systolische functie',
+                    'lv_dimensions': 'normale dimensies',
+                    'wall_motion': 'geen regionale wandbewegingsstoornissen',
                     'rv_function': 'normale functie',
                     'diastolic_function': 'normale diastolische functie',
+                    'la_dimensions': 'normale atriale dimensies',
+                    'mitral_valve': 'morfologisch en functioneel normaal',
+                    'aortic_valve': 'geen afwijkingen',
+                    'tricuspid_valve': 'morfologisch en functioneel normaal',
+                    'pulmonary_valve': 'morfologisch en functioneel normaal',
+                    'pericardium': 'normaal',
+                    'additional_findings': ''
+                }
+            },
+            'TEE': {
+                'name': 'Transesofageale Echocardiografie',
+                'template': self._get_tee_template(),
+                'required_fields': ['indication'],
+                'optional_fields': [
+                    'equipment', 'consent_doctor', 'supervisor', 'nurse', 'anesthesiologist',
+                    'sedation', 'probe_introduction', 'procedure_course', 'lv_description',
+                    'lv_dilation', 'lv_contractility', 'regional_wall_motion', 'rv_description',
+                    'rv_dilation', 'rv_contractility', 'atria_dilation', 'laa_description',
+                    'laa_contrast', 'laa_velocities', 'ias_description', 'mitral_description',
+                    'mitral_regurg', 'mitral_stenosis', 'aortic_description', 'aortic_regurg',
+                    'aortic_stenosis', 'tricuspid_description', 'tricuspid_regurg',
+                    'pulmonary_description', 'aorta_ascendens', 'pulmonary_artery',
+                    'vci_hepatic_veins', 'pericardium'
+                ],
+                'smart_defaults': {
+                    'indication': 'Cardiologische evaluatie',
+                    'equipment': '3D TEE met Philips toestel',
+                    'consent_doctor': 'dr. Verbeke',
+                    'supervisor': 'dr. Verbeke',
+                    'nurse': 'verpleegkundige aanwezig',
+                    'anesthesiologist': 'dr. aanwezig',
+                    'sedation': 'Midazolam en topicale Xylocaine spray',
+                    'probe_introduction': 'Vlotte introductie TEE probe',
+                    'procedure_course': 'Vlot verloop van onderzoek zonder complicatie',
+                    'lv_description': 'normaal',
+                    'lv_dilation': 'niet gedilateerd',
+                    'lv_contractility': 'goed contractiel',
+                    'regional_wall_motion': 'zonder regionale wandbewegingstoornissen',
+                    'rv_description': 'normaal',
+                    'rv_dilation': 'niet gedilateerd',
+                    'rv_contractility': 'goed contractiel',
+                    'atria_dilation': 'niet gedilateerd',
+                    'laa_description': 'normaal',
+                    'laa_contrast': 'geen spontaan contrast',
+                    'laa_velocities': 'normale snelheden',
+                    'ias_description': 'intact',
+                    'mitral_description': 'normaal',
+                    'mitral_regurg': 'geen',
+                    'mitral_stenosis': 'geen',
+                    'aortic_description': 'normaal',
+                    'aortic_regurg': 'geen',
+                    'aortic_stenosis': 'geen',
+                    'tricuspid_description': 'normaal',
+                    'tricuspid_regurg': 'geen',
+                    'pulmonary_description': 'normaal',
+                    'aorta_ascendens': 'normaal',
+                    'pulmonary_artery': 'normaal',
+                    'vci_hepatic_veins': 'normaal',
                     'pericardium': 'normaal'
                 }
             },
@@ -104,7 +164,7 @@ DIASTOLISCHE FUNCTIE:
 • {diastolic_function}
 
 ATRIA:
-• {atrial_assessment}
+• {la_dimensions}
 
 KLEPPEN:
 • Mitralisklep: {mitral_valve}
@@ -118,8 +178,40 @@ PERICARD:
 {additional_findings}
 
 CONCLUSIE:
-{conclusion}"""
-    
+Normale transthoracale echocardiografie"""
+
+    def _get_tee_template(self) -> str:
+        """Original TEE template from user's specifications"""
+        return """TEE ONDERZOEK - {date}
+
+INDICATIE: {indication}
+
+PROCEDURELE INFORMATIE:
+• Apparatuur: {equipment}
+• Afname mondeling consent: {consent_doctor}
+• Informed consent: patiënt kreeg uitleg over aard onderzoek, mogelijke resultaten en procedurele risico's en verklaart zich hiermee akkoord
+• Supervisie: {supervisor}
+• Verpleegkundige: {nurse}
+• Anesthesist: {anesthesiologist}
+• Locatie: endoscopie 3B
+• Sedatie: {sedation}
+• {probe_introduction}, {procedure_course}
+
+VERSLAG:
+• Linker ventrikel is {lv_description}, {lv_dilation} en {lv_contractility} {regional_wall_motion}
+• Rechter ventrikel is {rv_description}, {rv_dilation} en {rv_contractility}
+• Atria zijn {atria_dilation}
+• Linker hartoortje is {laa_description}, {laa_contrast}, zonder toegevoegde structuur. Snelheden: {laa_velocities}
+• Interatriaal septum: {ias_description}
+• Mitralisklep: {mitral_description}, insufficiëntie: {mitral_regurg}, stenose: {mitral_stenosis}
+• Aortaklep: {aortic_description}, insufficiëntie: {aortic_regurg}, stenose: {aortic_stenosis}
+• Tricuspiedklep: {tricuspid_description}, insufficiëntie: {tricuspid_regurg}
+• Pulmonalisklep: {pulmonary_description}
+• Aorta ascendens: {aorta_ascendens}
+• Pulmonale arterie: {pulmonary_artery}
+• VCI/levervenes: {vci_hepatic_veins}
+• Pericard: {pericardium}"""
+
     def _get_ecg_template(self) -> str:
         """Enhanced ECG template"""
         return """Elektrocardiogram - {date}
