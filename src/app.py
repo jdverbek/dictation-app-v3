@@ -24,7 +24,7 @@ if current_dir not in sys.path:
 # Import core modules
 from core.history_analyzer import HistoryAnalyzer
 from core.clinical_examiner import ClinicalExaminer
-from core.simple_audio_utils import SimpleAudioProcessor, get_simple_audio_tips
+from core.robust_audio_utils import RobustAudioProcessor, get_audio_processing_tips, get_error_solutions
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
@@ -77,7 +77,7 @@ def health_check():
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe():
-    """Main transcription and analysis endpoint"""
+    """Main transcription and analysis endpoint with robust error handling"""
     file = request.files.get('audio_file')
     verslag_type = request.form.get('verslag_type', 'consult')
     raadpleging_part = request.form.get('raadpleging_part', 'history')
@@ -88,27 +88,62 @@ def transcribe():
                              error=True)
 
     try:
-        # Step 1: Validate audio file
-        is_valid, validation_msg = SimpleAudioProcessor.validate_audio_file(file, file.filename)
+        # Step 1: Validate audio file with detailed metadata
+        is_valid, validation_msg, metadata = RobustAudioProcessor.validate_audio_file(file, file.filename)
         
         if not is_valid:
-            # Audio validation failed
-            tips = get_simple_audio_tips()
+            # Audio validation failed - provide specific solutions
+            error_type = 'file_too_large' if 'te groot' in validation_msg else 'format_error'
+            solutions = get_error_solutions(error_type)
+            tips = get_audio_processing_tips()
             return render_template('index.html', 
-                                 transcript=f"{validation_msg}\n\n{tips}",
+                                 transcript=f"{validation_msg}\n\n{solutions}\n\n{tips}",
                                  error=True)
         
-        # Step 2: Transcribe audio using Whisper
-        raw_text = transcribe_audio(file, file.filename)
+        # Step 2: Prepare file for API with memory management
+        prepared_file, prep_error = RobustAudioProcessor.prepare_file_for_api(file, file.filename)
+        if prepared_file is None:
+            solutions = get_error_solutions('file_too_large')
+            return render_template('index.html', 
+                                 transcript=f"{prep_error}\n\n{solutions}",
+                                 error=True)
         
-        # Step 3: Correct transcription
+        # Step 3: Transcribe audio with timeout handling
+        app.logger.info(f"Starting transcription for {file.filename} ({metadata['size_formatted']})")
+        
+        try:
+            raw_text = transcribe_audio_robust(prepared_file, file.filename, metadata['is_large'])
+        except Exception as transcribe_error:
+            app.logger.error(f"Transcription failed: {transcribe_error}")
+            
+            # Handle specific errors
+            error_str = str(transcribe_error)
+            if "timeout" in error_str.lower() or "timed out" in error_str.lower():
+                solutions = get_error_solutions('timeout')
+                error_msg = f"⏰ Verwerking duurde te lang (timeout)\n\n{solutions}"
+            elif "413" in error_str or "Payload Too Large" in error_str:
+                solutions = get_error_solutions('file_too_large')
+                error_msg = f"❌ Bestand te groot voor API\n\n{solutions}"
+            elif "400" in error_str or "Bad Request" in error_str:
+                error_msg = f"❌ Ongeldig audiobestand - probeer een ander formaat"
+            else:
+                error_msg = f"❌ Fout bij transcriptie: {error_str}"
+            
+            return render_template('index.html', 
+                                 transcript=error_msg,
+                                 error=True)
+        
+        # Step 4: Correct transcription
         corrected = correct_transcription(raw_text)
         
-        # Step 4: Process based on type
+        # Step 5: Process based on type
         today = datetime.date.today().strftime('%d-%m-%Y')
         
         # Add file info to the result
-        file_info = f"📁 {validation_msg}\n\n"
+        file_info = f"📁 {validation_msg}\n"
+        if metadata['recommendations']:
+            file_info += f"💡 {'; '.join(metadata['recommendations'])}\n"
+        file_info += "\n"
         
         if verslag_type == 'raadpleging':
             result = process_raadpleging(corrected, raadpleging_part, today)
@@ -131,48 +166,78 @@ def transcribe():
             return result
             
     except Exception as e:
-        app.logger.error(f"Transcription error: {str(e)}")
-        error_msg = str(e)
+        app.logger.error(f"Unexpected error in transcribe: {str(e)}")
+        error_msg = f"❌ Onverwachte fout: {str(e)}"
         
-        # Check if it's a file size error and provide helpful tips
-        if "413" in error_msg or "Payload Too Large" in error_msg:
-            tips = get_simple_audio_tips()
-            error_msg = f"⚠️ Bestand te groot voor OpenAI API\n\n{tips}"
-        else:
-            error_msg = f"⚠️ Fout bij verwerking: {error_msg}"
-            
+        # Provide general solutions
+        tips = get_audio_processing_tips()
         return render_template('index.html', 
-                             transcript=error_msg,
+                             transcript=f"{error_msg}\n\n{tips}",
                              error=True)
 
-def transcribe_audio(file_obj, filename):
-    """Transcribe audio file using OpenAI Whisper"""
-    # Reset file pointer to beginning and read data
-    file_obj.seek(0)
-    audio_data = file_obj.read()
-    audio_stream = io.BytesIO(audio_data)
+def transcribe_audio_robust(file_obj, filename, is_large_file=False):
+    """Transcribe audio file using OpenAI Whisper with robust error handling"""
+    import time
     
-    # Determine content type based on filename
-    file_ext = filename.lower().split('.')[-1] if '.' in filename else 'mp3'
-    content_type_map = {
-        'mp3': 'audio/mpeg',
-        'wav': 'audio/wav',
-        'webm': 'audio/webm',
-        'm4a': 'audio/mp4',
-        'aac': 'audio/aac',
-        'flac': 'audio/flac',
-        'ogg': 'audio/ogg'
-    }
-    content_type = content_type_map.get(file_ext, 'audio/mpeg')
+    # Set timeout based on file size
+    timeout = 300 if is_large_file else 120  # 5 minutes for large files, 2 minutes for normal
     
-    files = {'file': (filename, audio_stream, content_type)}
-    whisper_payload = {"model": "whisper-1", "language": "nl", "temperature": 0.0}
-    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
+    try:
+        # Reset file pointer to beginning
+        file_obj.seek(0)
+        audio_data = file_obj.read()
+        audio_stream = io.BytesIO(audio_data)
+        
+        # Determine content type based on filename
+        file_ext = filename.lower().split('.')[-1] if '.' in filename else 'mp3'
+        content_type_map = {
+            'mp3': 'audio/mpeg',
+            'wav': 'audio/wav',
+            'webm': 'audio/webm',
+            'm4a': 'audio/mp4',
+            'aac': 'audio/aac',
+            'flac': 'audio/flac',
+            'ogg': 'audio/ogg'
+        }
+        content_type = content_type_map.get(file_ext, 'audio/mpeg')
+        
+        files = {'file': (filename, audio_stream, content_type)}
+        whisper_payload = {"model": "whisper-1", "language": "nl", "temperature": 0.0}
+        headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
+        
+        app.logger.info(f"Starting OpenAI transcription for {filename} (timeout: {timeout}s)")
+        start_time = time.time()
+        
+        # Make the request with appropriate timeout
+        response = requests.post(WHISPER_URL, headers=headers, files=files, 
+                               data=whisper_payload, timeout=timeout)
+        
+        elapsed_time = time.time() - start_time
+        app.logger.info(f"OpenAI API response received in {elapsed_time:.1f}s")
+        
+        response.raise_for_status()
+        result = response.json().get('text', '').strip()
+        app.logger.info(f"Transcription successful: {len(result)} characters")
+        return result
+        
+    except requests.exceptions.Timeout:
+        error_msg = f"OpenAI API timeout after {timeout} seconds"
+        app.logger.error(error_msg)
+        raise Exception(error_msg)
+        
+    except requests.exceptions.RequestException as e:
+        error_msg = f"OpenAI API request failed: {str(e)}"
+        app.logger.error(error_msg)
+        raise Exception(error_msg)
+        
+    except Exception as e:
+        error_msg = f"Transcription error: {str(e)}"
+        app.logger.error(error_msg)
+        raise Exception(error_msg)
 
-    response = requests.post(WHISPER_URL, headers=headers, files=files, 
-                           data=whisper_payload, timeout=120)
-    response.raise_for_status()
-    return response.json().get('text', '').strip()
+def transcribe_audio(file_obj, filename):
+    """Legacy transcribe function - redirects to robust version"""
+    return transcribe_audio_robust(file_obj, filename, False)
 
 def correct_transcription(raw_text):
     """Correct transcription using GPT"""
