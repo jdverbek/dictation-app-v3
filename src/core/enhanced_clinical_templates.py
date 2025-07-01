@@ -20,28 +20,62 @@ class EnhancedClinicalTemplates:
             'TTE': {
                 'name': 'Transthoracale Echocardiografie',
                 'template': self._get_tte_template(),
-                'required_fields': ['lv_function', 'lv_dimensions'],
+                'required_fields': ['lv_function', 'lvef'],
                 'optional_fields': [
-                    'lv_edd', 'lv_esd', 'ivs', 'pw', 'lvef', 'wall_motion',
-                    'rv_function', 'tapse', 'rv_s_prime', 'diastolic_function',
-                    'e_velocity', 'a_velocity', 'e_dt', 'e_prime', 'e_e_prime',
-                    'la_dimensions', 'ra_dimensions', 'aortic_dimensions',
-                    'mitral_valve', 'aortic_valve', 'tricuspid_valve', 'pulmonary_valve',
-                    'pericardium', 'additional_findings'
+                    'lv_morphology', 'lv_edd', 'ivs', 'pw', 'lvef_method', 'regional_function',
+                    'rv_morphology', 'rv_function', 'tapse', 'rv_s_prime', 'diastolic_function',
+                    'e_velocity', 'a_velocity', 'e_dt', 'e_prime', 'e_e_prime', 'l_wave',
+                    'la_size', 'la_dimension', 'la_volume', 'ra_volume', 'aortic_sinus',
+                    'sinotubular', 'ascending', 'mitral_morphology', 'mitral_regurg',
+                    'aortic_cusps', 'aortic_morphology', 'pulmonary_regurg', 'tricuspid_regurg',
+                    'rvsp', 'cvp', 'ivc_size', 'ivc_variability', 'pericardium',
+                    'hb', 'creatinine', 'egfr', 'ldl', 'hba1c', 'conclusion',
+                    'medication_changes', 'additional_investigations', 'follow_up'
                 ],
                 'smart_defaults': {
-                    'lv_function': 'normale systolische functie',
-                    'lv_dimensions': 'normale dimensies',
-                    'wall_motion': 'geen regionale wandbewegingsstoornissen',
-                    'rv_function': 'normale functie',
-                    'diastolic_function': 'normale diastolische functie',
-                    'la_dimensions': 'normale atriale dimensies',
-                    'mitral_valve': 'morfologisch en functioneel normaal',
-                    'aortic_valve': 'geen afwijkingen',
-                    'tricuspid_valve': 'morfologisch en functioneel normaal',
-                    'pulmonary_valve': 'morfologisch en functioneel normaal',
+                    'lv_morphology': 'normaal',
+                    'lv_function': 'goed',
+                    'lvef': '60',
+                    'lvef_method': 'geschat',
+                    'regional_function': 'geen kinetiekstoornissen',
+                    'rv_morphology': 'normaal',
+                    'rv_function': 'goed',
+                    'tapse': '20',
+                    'rv_s_prime': '12',
+                    'diastolic_function': 'normaal',
+                    'e_velocity': '80',
+                    'a_velocity': '60',
+                    'e_dt': '180',
+                    'e_prime': '10',
+                    'e_e_prime': '8',
+                    'l_wave': 'neen',
+                    'la_size': 'normaal',
+                    'la_dimension': '38',
+                    'la_volume': '45',
+                    'ra_volume': '35',
+                    'aortic_sinus': '32',
+                    'sinotubular': '28',
+                    'ascending': '30',
+                    'mitral_morphology': 'normaal',
+                    'mitral_regurg': 'geen',
+                    'aortic_cusps': 'tricuspied',
+                    'aortic_morphology': 'normaal',
+                    'pulmonary_regurg': 'geen',
+                    'tricuspid_regurg': 'geen',
+                    'rvsp': 'niet opmeetbaar',
+                    'cvp': '5',
+                    'ivc_size': '18',
+                    'ivc_variability': 'normaal',
                     'pericardium': 'normaal',
-                    'additional_findings': ''
+                    'hb': 'niet vermeld',
+                    'creatinine': 'niet vermeld',
+                    'egfr': 'niet vermeld',
+                    'ldl': 'niet vermeld',
+                    'hba1c': 'niet vermeld',
+                    'conclusion': 'Normale transthoracale echocardiografie',
+                    'medication_changes': 'ongewijzigd',
+                    'additional_investigations': 'geen',
+                    'follow_up': '6'
                 }
             },
             'TEE': {
@@ -149,36 +183,33 @@ class EnhancedClinicalTemplates:
         }
     
     def _get_tte_template(self) -> str:
-        """Enhanced TTE template with better formatting"""
-        return """Transthoracale Echocardiografie - {date}
+        """Original TTE template from user's specifications"""
+        return """TTE op {date}:
+- Linker ventrikel: {lv_morphology}troof met EDD {lv_edd} mm, IVS {ivs} mm, PW {pw} mm. Globale functie: {lv_function} met LVEF {lvef}% {lvef_method}
+- Regionaal: {regional_function}
+- Rechter ventrikel: {rv_morphology}troof, globale functie: {rv_function} met TAPSE {tapse} mm en RV S' {rv_s_prime} cm/s
+- Diastole: {diastolic_function} met E {e_velocity} cm/s, A {a_velocity} cm/s, E DT {e_dt} ms, E' septaal {e_prime} cm/s, E/E' {e_e_prime}. L-golf: {l_wave}
+- Atria: LA {la_size} {la_dimension} mm, {la_volume} mL, RA {ra_volume} mL
+- Aortadimensies: sinus {aortic_sinus} mm, sinotubulair {sinotubular} mm, ascendens {ascending} mm
+- Mitralisklep: morfologisch {mitral_morphology}. insufficiëntie: {mitral_regurg}; stenose: geen
+- Aortaklep: {aortic_cusps}, morfologisch {aortic_morphology}. Functioneel: geen tekort
+- Pulmonalisklep: insufficiëntie: {pulmonary_regurg}; stenose: geen
+- Tricuspiedklep: insufficiëntie: {tricuspid_regurg}; geschatte RVSP: {rvsp} mmHg of niet opmeetbaar + CVD {cvp} mmHg gezien vena cava inferior: {ivc_size} mm, variabiliteit: {ivc_variability}
+- Pericard: {pericardium}
 
-LINKER VENTRIKEL:
-• Dimensies: {lv_dimensions}
-• Systolische functie: {lv_function}
-• Regionale wandbeweging: {wall_motion}
+Recente biochemie op {date}:
+- Hb {hb} g/dL
+- Creatinine {creatinine} mg/dL en eGFR {egfr} mL/min
+- LDL {ldl} mg/dL
+- HbA1c {hba1c}%
 
-RECHTER VENTRIKEL:
-• Functie: {rv_function}
+Conclusie:
+{conclusion}
 
-DIASTOLISCHE FUNCTIE:
-• {diastolic_function}
-
-ATRIA:
-• {la_dimensions}
-
-KLEPPEN:
-• Mitralisklep: {mitral_valve}
-• Aortaklep: {aortic_valve}
-• Tricuspiedklep: {tricuspid_valve}
-• Pulmonalisklep: {pulmonary_valve}
-
-PERICARD:
-• {pericardium}
-
-{additional_findings}
-
-CONCLUSIE:
-Normale transthoracale echocardiografie"""
+Beleid:
+- Medicatie ongewijzigd/gewijzigd: {medication_changes}
+- Bijkomende investigaties: {additional_investigations}
+- Controle over {follow_up} maand"""
 
     def _get_tee_template(self) -> str:
         """Original TEE template from user's specifications"""
