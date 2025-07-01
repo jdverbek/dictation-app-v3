@@ -34,6 +34,9 @@ class EnhancedClinicalTemplates:
                 ],
                 'smart_defaults': {
                     'lv_morphology': 'normaal',
+                    'lv_edd': '50',
+                    'ivs': '10',
+                    'pw': '9',
                     'lv_function': 'goed',
                     'lvef': '60',
                     'lvef_method': 'geschat',
