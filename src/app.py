@@ -24,7 +24,7 @@ if current_dir not in sys.path:
 # Import core modules
 from core.history_analyzer import HistoryAnalyzer
 from core.clinical_examiner import ClinicalExaminer
-from core.audio_utils import AudioProcessor, get_audio_processing_tips
+from core.simple_audio_utils import SimpleAudioProcessor, get_simple_audio_tips
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
@@ -88,18 +88,18 @@ def transcribe():
                              error=True)
 
     try:
-        # Step 1: Process and validate audio file
-        processed_file, final_filename, processing_msg = AudioProcessor.prepare_audio_for_api(file, file.filename)
+        # Step 1: Validate audio file
+        is_valid, validation_msg = SimpleAudioProcessor.validate_audio_file(file, file.filename)
         
-        if processed_file is None:
-            # Audio processing failed
-            tips = get_audio_processing_tips()
+        if not is_valid:
+            # Audio validation failed
+            tips = get_simple_audio_tips()
             return render_template('index.html', 
-                                 transcript=f"{processing_msg}\n\n{tips}",
+                                 transcript=f"{validation_msg}\n\n{tips}",
                                  error=True)
         
         # Step 2: Transcribe audio using Whisper
-        raw_text = transcribe_audio(processed_file, final_filename)
+        raw_text = transcribe_audio(file, file.filename)
         
         # Step 3: Correct transcription
         corrected = correct_transcription(raw_text)
@@ -107,27 +107,27 @@ def transcribe():
         # Step 4: Process based on type
         today = datetime.date.today().strftime('%d-%m-%Y')
         
-        # Add processing info to the result
-        processing_info = f"📁 {processing_msg}\n\n"
+        # Add file info to the result
+        file_info = f"📁 {validation_msg}\n\n"
         
         if verslag_type == 'raadpleging':
             result = process_raadpleging(corrected, raadpleging_part, today)
-            # Add processing info to the transcript
+            # Add file info to the transcript
             if hasattr(result, 'data') and result.data:
                 original_transcript = result.data.get('transcript', '')
-                result.data['transcript'] = processing_info + original_transcript
+                result.data['transcript'] = file_info + original_transcript
             return result
         elif verslag_type in ['TTE', 'TEE', 'ECG', 'EXERCISE_TEST', 'DEVICE_INTERROGATION', 'HOLTER']:
             result = process_clinical_examination(corrected, verslag_type, today)
             if hasattr(result, 'data') and result.data:
                 original_transcript = result.data.get('transcript', '')
-                result.data['transcript'] = processing_info + original_transcript
+                result.data['transcript'] = file_info + original_transcript
             return result
         else:
             result = process_original_format(corrected, verslag_type, today)
             if hasattr(result, 'data') and result.data:
                 original_transcript = result.data.get('transcript', '')
-                result.data['transcript'] = processing_info + original_transcript
+                result.data['transcript'] = file_info + original_transcript
             return result
             
     except Exception as e:
@@ -136,7 +136,7 @@ def transcribe():
         
         # Check if it's a file size error and provide helpful tips
         if "413" in error_msg or "Payload Too Large" in error_msg:
-            tips = get_audio_processing_tips()
+            tips = get_simple_audio_tips()
             error_msg = f"⚠️ Bestand te groot voor OpenAI API\n\n{tips}"
         else:
             error_msg = f"⚠️ Fout bij verwerking: {error_msg}"
@@ -147,8 +147,10 @@ def transcribe():
 
 def transcribe_audio(file_obj, filename):
     """Transcribe audio file using OpenAI Whisper"""
-    # Reset file pointer to beginning
+    # Reset file pointer to beginning and read data
     file_obj.seek(0)
+    audio_data = file_obj.read()
+    audio_stream = io.BytesIO(audio_data)
     
     # Determine content type based on filename
     file_ext = filename.lower().split('.')[-1] if '.' in filename else 'mp3'
@@ -163,7 +165,7 @@ def transcribe_audio(file_obj, filename):
     }
     content_type = content_type_map.get(file_ext, 'audio/mpeg')
     
-    files = {'file': (filename, file_obj, content_type)}
+    files = {'file': (filename, audio_stream, content_type)}
     whisper_payload = {"model": "whisper-1", "language": "nl", "temperature": 0.0}
     headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
 
