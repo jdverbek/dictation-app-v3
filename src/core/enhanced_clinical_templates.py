@@ -76,7 +76,14 @@ class EnhancedClinicalTemplates:
                     'additional_investigations', 'assessment', 'plan'
                 ],
                 'smart_defaults': {
-                    'physical_exam': 'cardiovasculair onderzoek uitgevoerd'
+                    'reason_visit': 'Cardiologische evaluatie',
+                    'physical_exam': 'cardiovasculair onderzoek uitgevoerd',
+                    'current_complaints': 'Zie reden voor verwijzing',
+                    'history': 'Relevante voorgeschiedenis zoals vermeld',
+                    'medication': 'Huidige medicatie besproken',
+                    'additional_investigations': 'Aanvullende diagnostiek zoals geïndiceerd',
+                    'assessment': 'Klinische beoordeling op basis van anamnese en onderzoek',
+                    'plan': 'Behandelplan besproken met patiënt'
                 }
             }
         }

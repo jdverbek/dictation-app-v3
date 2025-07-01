@@ -106,19 +106,37 @@ class EnhancedMedicalProcessor:
             },
             'CONSULT': {
                 'reason_visit': [
-                    r'(?:reden|aanmelding|verwijzing).*?(?:voor|wegens)\s*(.+?)(?:\.|$)',
-                    r'komt voor\s*(.+?)(?:\.|$)',
-                    r'verwezen wegens\s*(.+?)(?:\.|$)'
+                    r'(?:reden|aanmelding|verwijzing).*?(?:voor|wegens)\s*(.+?)(?:\.|,|$)',
+                    r'komt voor\s*(.+?)(?:\.|,|$)',
+                    r'verwezen wegens\s*(.+?)(?:\.|,|$)',
+                    r'spoedconsult.*?(?:voor|wegens)\s*(.+?)(?:\.|,|$)',
+                    r'spoed.*?(?:voor|wegens)\s*(.+?)(?:\.|,|$)',
+                    r'urgentie.*?(.+?)(?:\.|,|$)',
+                    r'acute.*?(.+?)(?:\.|,|$)',
+                    r'(?:klacht|probleem|symptoom).*?(.+?)(?:\.|,|$)',
+                    r'patiënt.*?(?:met|voor|wegens)\s*(.+?)(?:\.|,|$)',
+                    r'(.+?)(?:\s+sinds|\s+gedurende|\s+al).*?(?:\.|,|$)'
                 ],
                 'current_complaints': [
                     r'(?:klachten|symptomen|problemen).*?(.+?)(?:\.|voorgeschiedenis|medicatie|onderzoek)',
                     r'patiënt meldt\s*(.+?)(?:\.|voorgeschiedenis|medicatie|onderzoek)',
-                    r'anamnese.*?(.+?)(?:\.|voorgeschiedenis|medicatie|onderzoek)'
+                    r'anamnese.*?(.+?)(?:\.|voorgeschiedenis|medicatie|onderzoek)',
+                    r'(?:heeft|voelt|ervaart).*?(.+?)(?:\.|voorgeschiedenis|medicatie|onderzoek)',
+                    r'(?:pijn|kortademig|moe|duizelig|misselijk).*?(.+?)(?:\.|voorgeschiedenis|medicatie|onderzoek)'
                 ],
                 'medication': [
                     r'medicatie.*?(.+?)(?:\.|onderzoek|beoordeling|plan)',
                     r'gebruikt.*?(.+?)(?:\.|onderzoek|beoordeling|plan)',
-                    r'therapie.*?(.+?)(?:\.|onderzoek|beoordeling|plan)'
+                    r'therapie.*?(.+?)(?:\.|onderzoek|beoordeling|plan)',
+                    r'(?:neemt|slikt|krijgt).*?(.+?)(?:\.|onderzoek|beoordeling|plan)'
+                ],
+                'assessment': [
+                    r'(?:diagnose|beoordeling|conclusie|indruk).*?(.+?)(?:\.|plan|beleid|behandeling)',
+                    r'(?:verdenking|waarschijnlijk|mogelijk).*?(.+?)(?:\.|plan|beleid|behandeling)'
+                ],
+                'plan': [
+                    r'(?:plan|beleid|behandeling|advies).*?(.+?)(?:\.|$)',
+                    r'(?:voorstellen|aanraden|starten).*?(.+?)(?:\.|$)'
                 ]
             }
         }
@@ -161,6 +179,25 @@ class EnhancedMedicalProcessor:
                     if cleaned_value:
                         findings[field] = cleaned_value
                         break  # Use first match for each field
+        
+        # Special handling for CONSULT type - ensure reason_visit is always present
+        if report_type == 'CONSULT' and 'reason_visit' not in findings:
+            # Try to extract from the beginning of the text
+            first_sentence = text.split('.')[0] if '.' in text else text
+            if len(first_sentence.strip()) > 5:
+                findings['reason_visit'] = first_sentence.strip()[:100]  # Limit length
+            else:
+                # Use a generic default based on content
+                if any(word in text_lower for word in ['spoed', 'urgent', 'acute']):
+                    findings['reason_visit'] = 'Spoedconsult cardiologie'
+                elif any(word in text_lower for word in ['pijn', 'borst']):
+                    findings['reason_visit'] = 'Thoracale pijn'
+                elif any(word in text_lower for word in ['kortademig', 'benauwd']):
+                    findings['reason_visit'] = 'Dyspnoe'
+                elif any(word in text_lower for word in ['hartkloppingen', 'palpitaties']):
+                    findings['reason_visit'] = 'Palpitaties'
+                else:
+                    findings['reason_visit'] = 'Cardiologische evaluatie'
         
         # Apply report-specific post-processing
         if report_type == 'TTE':
