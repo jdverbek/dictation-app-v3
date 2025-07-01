@@ -24,7 +24,7 @@ if current_dir not in sys.path:
 # Import core modules
 from core.history_analyzer import HistoryAnalyzer
 from core.clinical_examiner import ClinicalExaminer
-from core.robust_audio_utils import RobustAudioProcessor, get_audio_processing_tips, get_error_solutions
+from core.enhanced_audio_utils import EnhancedAudioProcessor, get_whisper_params_for_medical, handle_empty_transcription, get_error_solutions, get_medical_recording_tips
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
@@ -104,31 +104,42 @@ def transcribe():
                              error=True)
 
     try:
-        # Step 1: Validate audio file with detailed metadata
-        is_valid, validation_msg, metadata = RobustAudioProcessor.validate_audio_file(file, file.filename)
+        # Step 1: Validate audio file with medical recording considerations
+        is_valid, validation_msg, metadata = EnhancedAudioProcessor.validate_audio_file(file, file.filename)
         
         if not is_valid:
             # Audio validation failed - provide specific solutions
             error_type = 'file_too_large' if 'te groot' in validation_msg else 'format_error'
             solutions = get_error_solutions(error_type)
-            tips = get_audio_processing_tips()
+            tips = get_medical_recording_tips()
             return render_template('index.html', 
                                  transcript=f"{validation_msg}\n\n{solutions}\n\n{tips}",
                                  error=True)
         
-        # Step 2: Prepare file for API with memory management
-        prepared_file, prep_error = RobustAudioProcessor.prepare_file_for_api(file, file.filename)
+        # Step 2: Prepare file for API with medical optimizations
+        prepared_file, prep_error = EnhancedAudioProcessor.prepare_file_for_api(file, file.filename)
         if prepared_file is None:
             solutions = get_error_solutions('file_too_large')
             return render_template('index.html', 
                                  transcript=f"{prep_error}\n\n{solutions}",
                                  error=True)
         
-        # Step 3: Transcribe audio with timeout handling
+        # Step 3: Transcribe audio with medical recording optimizations
         app.logger.info(f"Starting transcription for {file.filename} ({metadata['size_formatted']})")
         
         try:
-            raw_text = transcribe_audio_robust(prepared_file, file.filename, metadata['is_large'])
+            # Use enhanced parameters for medical recordings
+            whisper_params = get_whisper_params_for_medical(metadata)
+            raw_text = transcribe_audio_robust(prepared_file, file.filename, metadata['is_large'], whisper_params)
+            
+            # Check for empty or minimal transcription
+            if not raw_text or len(raw_text.strip()) < 10:
+                app.logger.warning(f"Empty or minimal transcription for {file.filename}: '{raw_text}'")
+                empty_feedback = handle_empty_transcription(metadata, file.filename)
+                return render_template('index.html', 
+                                     transcript=empty_feedback,
+                                     error=True)
+                
         except Exception as transcribe_error:
             app.logger.error(f"Transcription failed: {transcribe_error}")
             
@@ -191,12 +202,20 @@ def transcribe():
                              transcript=f"{error_msg}\n\n{tips}",
                              error=True)
 
-def transcribe_audio_robust(file_obj, filename, is_large_file=False):
-    """Transcribe audio file using OpenAI Whisper with robust error handling"""
+def transcribe_audio_robust(file_obj, filename, is_large_file=False, whisper_params=None):
+    """Transcribe audio file using OpenAI Whisper with robust error handling and medical optimizations"""
     import time
     
     # Set timeout based on file size
     timeout = 300 if is_large_file else 120  # 5 minutes for large files, 2 minutes for normal
+    
+    # Default whisper parameters
+    if whisper_params is None:
+        whisper_params = {
+            "model": "whisper-1",
+            "language": "nl",
+            "temperature": 0.0
+        }
     
     try:
         # Reset file pointer to beginning
@@ -218,15 +237,23 @@ def transcribe_audio_robust(file_obj, filename, is_large_file=False):
         content_type = content_type_map.get(file_ext, 'audio/mpeg')
         
         files = {'file': (filename, audio_stream, content_type)}
-        whisper_payload = {"model": "whisper-1", "language": "nl", "temperature": 0.0}
         headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
         
+        # Prepare data payload with whisper parameters
+        data_payload = {}
+        for key, value in whisper_params.items():
+            if key != 'model':  # model is handled separately
+                data_payload[key] = value
+        data_payload["model"] = whisper_params.get("model", "whisper-1")
+        
         app.logger.info(f"Starting OpenAI transcription for {filename} (timeout: {timeout}s)")
+        if whisper_params.get("prompt"):
+            app.logger.info(f"Using medical recording prompt for better quiet audio handling")
         start_time = time.time()
         
         # Make the request with appropriate timeout
         response = requests.post(WHISPER_URL, headers=headers, files=files, 
-                               data=whisper_payload, timeout=timeout)
+                               data=data_payload, timeout=timeout)
         
         elapsed_time = time.time() - start_time
         app.logger.info(f"OpenAI API response received in {elapsed_time:.1f}s")
