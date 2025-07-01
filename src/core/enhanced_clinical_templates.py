@@ -34,47 +34,22 @@ class EnhancedClinicalTemplates:
                 ],
                 'smart_defaults': {
                     'lv_morphology': 'normaal',
-                    'lv_edd': '50',
-                    'ivs': '10',
-                    'pw': '9',
                     'lv_function': 'goed',
-                    'lvef': '60',
                     'lvef_method': 'geschat',
                     'regional_function': 'geen kinetiekstoornissen',
                     'rv_morphology': 'normaal',
                     'rv_function': 'goed',
-                    'tapse': '20',
-                    'rv_s_prime': '12',
                     'diastolic_function': 'normaal',
-                    'e_velocity': '80',
-                    'a_velocity': '60',
-                    'e_dt': '180',
-                    'e_prime': '10',
-                    'e_e_prime': '8',
                     'l_wave': 'neen',
                     'la_size': 'normaal',
-                    'la_dimension': '38',
-                    'la_volume': '45',
-                    'ra_volume': '35',
-                    'aortic_sinus': '32',
-                    'sinotubular': '28',
-                    'ascending': '30',
                     'mitral_morphology': 'normaal',
                     'mitral_regurg': 'geen',
                     'aortic_cusps': 'tricuspied',
                     'aortic_morphology': 'normaal',
                     'pulmonary_regurg': 'geen',
                     'tricuspid_regurg': 'geen',
-                    'rvsp': 'niet opmeetbaar',
-                    'cvp': '5',
-                    'ivc_size': '18',
                     'ivc_variability': 'normaal',
                     'pericardium': 'normaal',
-                    'hb': 'niet vermeld',
-                    'creatinine': 'niet vermeld',
-                    'egfr': 'niet vermeld',
-                    'ldl': 'niet vermeld',
-                    'hba1c': 'niet vermeld',
                     'conclusion': 'Normale transthoracale echocardiografie',
                     'medication_changes': 'ongewijzigd',
                     'additional_investigations': 'geen',
@@ -323,7 +298,7 @@ BELEID:
         if not date:
             date = datetime.now().strftime('%d-%m-%Y')
         
-        # Start with smart defaults
+        # Start with smart defaults for qualitative fields only
         formatted_data = template_config.get('smart_defaults', {}).copy()
         
         # Override with actual findings
@@ -340,9 +315,9 @@ BELEID:
         elif template_type == 'CONSULT':
             formatted_data = self._format_consult_data(formatted_data)
         
-        # Format template
+        # Format template with conditional sections
         try:
-            formatted_template = template_text.format(**formatted_data)
+            formatted_template = self._format_template_conditionally(template_text, formatted_data)
             
             # Clean up formatting
             formatted_template = self._clean_template_formatting(formatted_template)
@@ -350,6 +325,136 @@ BELEID:
             return formatted_template
         except KeyError as e:
             return f"Template formatting error: missing field {e}"
+    
+    def _format_template_conditionally(self, template: str, data: Dict[str, Any]) -> str:
+        """Format template, skipping sections with missing measurements"""
+        import re
+        
+        # For TTE template, handle conditional formatting
+        if 'TTE op' in template:
+            return self._format_tte_template_conditionally(template, data)
+        else:
+            # For other templates, use standard formatting
+            return template.format(**data)
+    
+    def _format_tte_template_conditionally(self, template: str, data: Dict[str, Any]) -> str:
+        """Format TTE template conditionally, skipping missing measurements"""
+        lines = template.split('\n')
+        formatted_lines = []
+        
+        for line in lines:
+            # Handle special cases for lines with multiple measurements
+            if 'EDD' in line and 'IVS' in line and 'PW' in line:
+                # LV dimensions line - only include if at least one measurement is present
+                if any(field in data and data[field] for field in ['lv_edd', 'ivs', 'pw']):
+                    formatted_line = self._format_lv_dimensions_line(line, data)
+                    if formatted_line:
+                        formatted_lines.append(formatted_line)
+                continue
+            
+            elif 'TAPSE' in line and 'RV S' in line:
+                # RV function line - only include if measurements are present
+                if any(field in data and data[field] for field in ['tapse', 'rv_s_prime']):
+                    formatted_line = self._format_rv_function_line(line, data)
+                    if formatted_line:
+                        formatted_lines.append(formatted_line)
+                continue
+            
+            elif any(measurement in line for measurement in ['cm/s', 'ms', 'mm', 'mL', 'mmHg', 'g/dL', 'mg/dL']):
+                # Skip lines with measurements if data is missing
+                if self._line_has_missing_measurements(line, data):
+                    continue
+            
+            # Format line if all required data is present
+            try:
+                formatted_line = line.format(**data)
+                formatted_lines.append(formatted_line)
+            except KeyError:
+                # Skip lines with missing data
+                continue
+        
+        return '\n'.join(formatted_lines)
+    
+    def _format_lv_dimensions_line(self, line: str, data: Dict[str, Any]) -> str:
+        """Format LV dimensions line with only available measurements"""
+        parts = []
+        
+        # Add morphology if available
+        if 'lv_morphology' in data and data['lv_morphology']:
+            parts.append(f"{data['lv_morphology']}troof")
+        
+        # Add dimensions that are available
+        dimensions = []
+        if 'lv_edd' in data and data['lv_edd']:
+            dimensions.append(f"EDD {data['lv_edd']} mm")
+        if 'ivs' in data and data['ivs']:
+            dimensions.append(f"IVS {data['ivs']} mm")
+        if 'pw' in data and data['pw']:
+            dimensions.append(f"PW {data['pw']} mm")
+        
+        if dimensions:
+            parts.append("met " + ", ".join(dimensions))
+        
+        # Add function
+        if 'lv_function' in data and 'lvef' in data and data['lvef']:
+            parts.append(f"Globale functie: {data['lv_function']} met LVEF {data['lvef']}%")
+            if 'lvef_method' in data and data['lvef_method']:
+                parts[-1] += f" {data['lvef_method']}"
+        elif 'lv_function' in data:
+            parts.append(f"Globale functie: {data['lv_function']}")
+        
+        if parts:
+            return f"- Linker ventrikel: {'. '.join(parts)}"
+        return ""
+    
+    def _format_rv_function_line(self, line: str, data: Dict[str, Any]) -> str:
+        """Format RV function line with only available measurements"""
+        parts = []
+        
+        # Add morphology if available
+        if 'rv_morphology' in data and data['rv_morphology']:
+            parts.append(f"{data['rv_morphology']}troof")
+        
+        # Add function
+        if 'rv_function' in data:
+            function_part = f"globale functie: {data['rv_function']}"
+            
+            # Add measurements if available
+            measurements = []
+            if 'tapse' in data and data['tapse']:
+                measurements.append(f"TAPSE {data['tapse']} mm")
+            if 'rv_s_prime' in data and data['rv_s_prime']:
+                measurements.append(f"RV S' {data['rv_s_prime']} cm/s")
+            
+            if measurements:
+                function_part += " met " + " en ".join(measurements)
+            
+            parts.append(function_part)
+        
+        if parts:
+            return f"- Rechter ventrikel: {', '.join(parts)}"
+        return ""
+    
+    def _line_has_missing_measurements(self, line: str, data: Dict[str, Any]) -> bool:
+        """Check if a line contains measurement fields that are missing"""
+        import re
+        
+        # Find all field placeholders in the line
+        field_pattern = r'\{([^}]+)\}'
+        fields = re.findall(field_pattern, line)
+        
+        # Check if any measurement fields are missing
+        measurement_fields = ['lv_edd', 'ivs', 'pw', 'tapse', 'rv_s_prime', 'e_velocity', 
+                            'a_velocity', 'e_dt', 'e_prime', 'e_e_prime', 'la_dimension', 
+                            'la_volume', 'ra_volume', 'aortic_sinus', 'sinotubular', 
+                            'ascending', 'rvsp', 'cvp', 'ivc_size', 'hb', 'creatinine', 
+                            'egfr', 'ldl', 'hba1c']
+        
+        for field in fields:
+            if field in measurement_fields and (field not in data or not data[field]):
+                return True
+        
+        return False
     
     def _format_tte_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Format TTE-specific data with medical language"""
