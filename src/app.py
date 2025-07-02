@@ -71,52 +71,57 @@ BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat
 - Correcties kan bevatten
 - Heen en weer kan springen tussen onderwerpen
 
-Uw taak: Organiseer dit intuïtieve dictaat in het EXACTE TTE-format hieronder.
+Uw taak: Analyseer het dictaat en vul het TTE-template in met de WERKELIJKE BEVINDINGEN.
 
 KRITIEK: 
-- Volg het template EXACT - GEEN vrije tekst, GEEN genummerde lijsten, GEEN narratieve beschrijving
-- Gebruik ALLEEN de exacte template structuur hieronder
+- VERVANG ALLE (...) met werkelijke gegevens uit het dictaat
+- Als iets niet genoemd wordt, gebruik dan logische medische beschrijvingen
+- GEEN (...) in de finale output - vul alles in met echte data
+- Volg het template format EXACT regeltje per regeltje
 - GEEN extra tekst voor of na het template
 - GEEN "Verslag:" header - begin direct met "TTE op {today}:"
-- GEEN procesdetails of uitleg - ALLEEN het template
 
-REGELS:
-- Volg het template format EXACT regeltje per regeltje
-- Vul alle velden in - laat GEEN lijnen weg van de template
-- Bij specifieke metingen: gebruik exacte cijfers zoals gedicteerd
-- Bij ontbrekende metingen: laat (...) staan of gebruik beschrijvende termen uit template
-- GEEN vrije tekst - ALLEEN de exacte template structuur
-- GEEN genummerde lijsten - ALLEEN template format
-- Behoud alle cijfers en metingen exact zoals gedicteerd
-- Interpreteer informele taal naar correcte medische terminologie
+REGELS VOOR INVULLEN:
+1. WERKELIJKE METINGEN: Gebruik exacte cijfers zoals gedicteerd (bijv. EDD 52 mm, LVEF 65%)
+2. WERKELIJKE BESCHRIJVINGEN: Gebruik echte bevindingen (bijv. "eutroof", "gedilateerd", "prolaps")
+3. LOGISCHE DEFAULTS: Als niet genoemd, gebruik medisch logische beschrijvingen:
+   - Voor normale structuren: "eutroof", "normaal", "geen"
+   - Voor functie: "goed", "normaal" 
+   - Voor kleppen: "morfologisch normaal", "geen insufficiëntie"
+4. GEEN (...) BEHOUDEN - vervang alles met echte gegevens
 
-BEGIN DIRECT MET:
+VOORBEELD INVULLING:
+- Linker ventrikel: eutroof met EDD 52 mm, IVS 10 mm, PW 9 mm. Globale functie: goed met LVEF 65% geschat
+- Mitralisklep: morfologisch prolaps. insufficiëntie: gering ; stenose: geen
+- Atria: LA gedilateerd 45 mm, 65 mL, RA 35 mL
+
+TEMPLATE STRUCTUUR (VUL IN MET ECHTE DATA):
 
 TTE op {today}:
-- Linker ventrikel: (...)troof met EDD (...) mm, IVS (...) mm, PW (...) mm. Globale functie: (goed/licht gedaald/matig gedaald/ernstig gedaald) met LVEF (...)% (geschat/monoplane/biplane)
-- Regionaal: (geen kinetiekstoornissen/zone van hypokinesie/zone van akinesie)
-- Rechter ventrikel: (...)troof, globale functie: (...) met TAPSE (...) mm en RV S' (...) cm/s
-- Diastole: (normaal/vertraagde relaxatie/dysfunctie graad 2/dysfunctie graad 3) met E (...) cm/s, A (...) cm/s, E DT (...) ms, E' septaal (...) cm/s, E/E' (…). L-golf: (ja/neen)
-- Atria: LA (normaal/licht gedilateerd/sterk gedilateerd) (...) mm, (…) mL, RA (…) mL
-- Aortadimensies: sinus (…) mm, sinotubulair (…) mm, ascendens (…) mm
-- Mitralisklep: morfologisch (normaal/sclerotisch/verdikt/prolaps/restrictief). insufficiëntie: (…) ; stenose: geen
-- Aortaklep: (tricuspied/bicuspied), morfologisch (normaal/sclerotisch/mild verkalkt/matig verkalkt/ernstig verkalkt). Functioneel: geen tekort
-- Pulmonalisklep: insufficiëntie: (…) ; stenose: geen
-- Tricuspiedklep: insufficiëntie: (…) ; geschatte RVSP: (…) mmHg of niet opmeetbaar + CVD (…) mmHg gezien vena cava inferior: (…) mm, variabiliteit: (…) 
-- Pericard: (…)  
+- Linker ventrikel: [vul in met echte data] met EDD [cijfer] mm, IVS [cijfer] mm, PW [cijfer] mm. Globale functie: [echte beoordeling] met LVEF [cijfer]% [methode]
+- Regionaal: [echte bevinding]
+- Rechter ventrikel: [echte data], globale functie: [echte beoordeling] met TAPSE [cijfer] mm en RV S' [cijfer] cm/s
+- Diastole: [echte beoordeling] met E [cijfer] cm/s, A [cijfer] cm/s, E DT [cijfer] ms, E' septaal [cijfer] cm/s, E/E' [cijfer]. L-golf: [ja/neen]
+- Atria: LA [echte beoordeling] [cijfer] mm, [cijfer] mL, RA [cijfer] mL
+- Aortadimensies: sinus [cijfer] mm, sinotubulair [cijfer] mm, ascendens [cijfer] mm
+- Mitralisklep: morfologisch [echte bevinding]. insufficiëntie: [echte graad] ; stenose: [echte bevinding]
+- Aortaklep: [tricuspied/bicuspied], morfologisch [echte bevinding]. Functioneel: [echte bevinding]
+- Pulmonalisklep: insufficiëntie: [echte graad] ; stenose: [echte bevinding]
+- Tricuspiedklep: insufficiëntie: [echte graad] ; geschatte RVSP: [cijfer] mmHg + CVD [cijfer] mmHg gezien vena cava inferior: [cijfer] mm, variabiliteit: [echte bevinding]
+- Pericard: [echte bevinding]
 
 Recente biochemie op {today}:
-- Hb (…) g/dL
-- Creatinine (…) mg/dL en eGFR (…) mL/min
-- LDL (…) mg/dL
-- HbA1c (…)%
+- Hb [cijfer] g/dL
+- Creatinine [cijfer] mg/dL en eGFR [cijfer] mL/min
+- LDL [cijfer] mg/dL
+- HbA1c [cijfer]%
 
-Conclusie:
+Conclusie: [echte conclusie gebaseerd op bevindingen]
 
 Beleid:
-- Medicatie ongewijzigd/gewijzigd: …
-- Bijkomende investigaties: …
-- Controle over … maand
+- Medicatie ongewijzigd/gewijzigd: [echte aanbeveling]
+- Bijkomende investigaties: [echte aanbeveling]
+- Controle over [cijfer] maand
 """
         else:
             # Default template for other types
