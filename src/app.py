@@ -150,6 +150,22 @@ SPECIALE REGEL voor "normaal echo behalve..." of "normale bevindingen behalve...
 - Behalve de specifiek genoemde afwijkingen
 - Dit zorgt voor complete medische documentatie
 
+LOGISCHE CONSISTENTIE REGELS:
+- CVD en vena cava inferior moeten logisch consistent zijn:
+  * CVD 0-3 mmHg → IVC normaal (<21mm), variabiliteit >50%
+  * CVD 4-8 mmHg → IVC gedilateerd of variabiliteit verminderd
+  * CVD >8 mmHg → IVC gedilateerd (>21mm), variabiliteit <50%
+- RVSP en tricuspied insufficiëntie moeten consistent zijn:
+  * RVSP >40 mmHg → minstens milde tricuspied insufficiëntie
+  * Geen RVSP meetbaar → geen of minimale tricuspied insufficiëntie
+- LVEF en globale functie moeten consistent zijn:
+  * LVEF >55% → goede functie
+  * LVEF 45-55% → licht gedaalde functie
+  * LVEF 30-45% → matig gedaalde functie
+  * LVEF <30% → ernstig gedaalde functie
+- Gebruik alleen genoemde waarden, maar zorg voor logische consistentie
+- Bij tegenstrijdige informatie, geef voorrang aan specifieke metingen
+
 Uw taak: Organiseer dit intuïtieve dictaat in het exacte TTE-format hieronder.
 
 REGELS:
