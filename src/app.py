@@ -430,15 +430,16 @@ REGELS:
 - Gebruik medisch correcte terminologie
 - Zorg voor fysiologische logica
 
-Geef het gecorrigeerde verslag terug."""},
+Geef ALLEEN het gecorrigeerde verslag terug, GEEN transcriptie of procesdetails."""},
             {"role": "user", "content": f"Transcriptie:\n{corrected}\n\nVerslag:\n{structured}"}
         ])
 
-        # 6) Finale validatie op onnauwkeurigheden
+        # 6) Finale validatie op onnauwkeurigheden - alleen het verslag teruggeven
         validation = call_gpt([
             {"role": "system", "content": (
                 "Finale controle: verwijder niet in transcriptie vermelde data en controleer op resterende inconsistenties. "
-                "Behoud alle genoemde cijfers en metingen exact zoals vermeld."
+                "Behoud alle genoemde cijfers en metingen exact zoals vermeld. "
+                "BELANGRIJK: Geef ALLEEN het finale medische verslag terug, GEEN transcriptie of procesdetails."
             )},
             {"role": "user",   "content": f"Transcriptie:\n{corrected}\n\nVerslag:\n{consistency_check}"}
         ])
@@ -453,7 +454,7 @@ Geef het gecorrigeerde verslag terug."""},
                 {"role": "user", "content": validation}
             ])
 
-        # 8) Render output
+        # 8) Render output - alleen het finale verslag tonen
         if verslag_type in ['TTE', 'TEE']:
             return render_template('index.html', transcript=validation)
         return render_template('index.html', transcript=validation, advies=advice)
