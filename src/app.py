@@ -262,6 +262,11 @@ BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat
 - Correcties kan bevatten
 - Heen en weer kan springen tussen onderwerpen
 
+SPECIALE AANDACHT:
+- Als echo bevindingen genoemd worden, maak een aparte "Echocardiografie" sectie
+- Geef SPECIFIEKE medicatie aanbevelingen met doseringen indien genoemd
+- Vermijd vage aanbevelingen zoals "aanpassing medicatie" - wees specifiek
+
 Uw taak: Organiseer dit intuïtieve dictaat in het exacte spoedconsult-format hieronder.
 
 REGELS:
@@ -269,6 +274,8 @@ REGELS:
 - Behoud alle cijfers en metingen exact zoals gedicteerd
 - Laat secties weg indien geen data beschikbaar
 - Zet informele taal om naar correcte medische terminologie
+- Echo bevindingen in aparte sectie indien genoemd
+- Specifieke medicatie aanbevelingen
 
 Spoedconsult cardiologie op {today}
 
@@ -278,30 +285,49 @@ Anamnese:
 Thoracale last ja/neen: welk soort pijn (scheurend, druk, messteken), uitstraling, hoe lang, beïnvloeding door ademhaling etc
 Syncope ja/neen: prodromi? Tijdens inspanning? RSP of palpitaties net voordien?
 Palpitaties ja/neen: wanneer, hoe lang, graduele/sudden onset, regelmatig/onregelmatig,…
-Dyspneu ja/neen: wanneer, hoe erg (NYHA), sinds wanneer,…
+Dyspneu ja/neen: inspannings- of rustdyspneu, orthopneu, PND, hoelang, progressief?
 
 Klinisch onderzoek:
-Cor: regelmatig, geen souffle.
-Longen zuiver.
-Perifeer: geen oedemen.
-Jugulairen niet gestuwd.
+Cor: (regelmatig/onregelmatig), (souffles/galop/wrijfgeruisen)
+Longen: (vesiculair/crepitaties/bronchiaal/verminderd)
+Perifeer: (oedeem/cyanose/clubbing)
+Jugulairen: (gestuwde/normale vena cava)
 
 Aanvullend onderzoek:
 ECG op {today}:
-- ritme: (sinusaal/VKF/voorkamerflutter/atriale tachycardie) met ventriculair antwoord aan (...)/min.
-- PR: (normaal/verlengd/verkort) (...) ms
-- QRS: (normale/linkser/rechter) as, (smal/verbreed met LBTB/verbreed met RBTB/verbreed met aspecifiek IVCD)
-- repolarisatie: (normaal/gestoord met …)
-- QTc: (normaal/verlengd) (…) ms
+Ritme: (sinusritme/VKF/VT/etc)
+Frequentie: (...) bpm
+PR: (...) ms
+QRS: (...) ms, as (normaal/links/rechts)
+Repolarisatie: (normaal/gestoord met...)
+QTc: (...) ms
+
+Echocardiografie op {today}: (ALLEEN indien echo bevindingen genoemd in dictaat)
+- Linker ventrikel: (...) met LVEF (...)%
+- Rechter ventrikel: (...)
+- Atria: (...)
+- Kleppen: (...)
+- Overige bevindingen: (...)
+
+Laboratorium: (indien genoemd)
+- NT-proBNP: (...) ng/L
+- Troponine T: (...) ng/L
+- Overige: (...)
 
 Conclusie:
+(Medische interpretatie van bevindingen)
 
 Beleid:
-- Medicatie: (...)
-- Bijkomende investigaties: (...)
-- Opvolging: (...)
+Medicatie: (SPECIFIEKE medicatie met doseringen indien genoemd, anders "zie aanbevelingen")
+- ACE-remmer/ARB: (specifieke medicatie en dosering)
+- Bètablokker: (specifieke medicatie en dosering)
+- Diuretica: (specifieke medicatie en dosering)
+- Anticoagulatie: (specifieke medicatie en dosering)
+
+Bijkomende investigaties: (specifieke onderzoeken indien genoemd)
+Opvolging: (specifieke termijnen en parameters indien genoemd)
 """
-        else:  # raadpleging or consult
+        else:  # raadpleging of consult
             template_instruction = f"""
 BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat de informatie:
 - Niet in de juiste volgorde staat
