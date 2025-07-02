@@ -392,16 +392,55 @@ Beleid:
             {"role": "user",    "content": corrected}
         ])
 
-        # 5) Validatie op onnauwkeurigheden
-        validation = call_gpt([
-            {"role": "system", "content": (
-                "Controleer het verslag: verwijder niet in transcriptie vermelde data en corrigeer inconsistenties. "
-                "Behoud alle genoemde cijfers en metingen exact zoals vermeld."
-            )},
-            {"role": "user",   "content": f"Transcriptie:\n{corrected}\n\nVerslag:\n{structured}"}
+        # 5) Uitgebreide consistentievalidatie op medische inconsistenties
+        consistency_check = call_gpt([
+            {"role": "system", "content": """MEDISCHE CONSISTENTIE VALIDATIE:
+
+Controleer het verslag op ALLE soorten medische inconsistenties en corrigeer ze:
+
+1. BESCHRIJVING vs METINGEN:
+   - "normaal" met afwijkende waarden → pas beschrijving aan
+   - "mild" met ernstige waarden → pas ernst aan
+   - "goed" met slechte metingen → pas functie aan
+
+2. SPECIFIEKE INCONSISTENTIES:
+   - LA "normaal" met >40mm → "gedilateerd"
+   - LVEF "goed" met <50% → "gedaald"
+   - IVC "normaal" met >21mm → "gedilateerd"
+   - Klep "normaal" met significante regurgitatie → "afwijkend"
+
+3. FYSIOLOGISCHE LOGICA:
+   - CVD vs IVC grootte en variabiliteit
+   - RVSP vs tricuspied regurgitatie
+   - LVEF vs functionele beschrijving
+   - Klepafwijkingen vs hemodynamische impact
+
+4. ERNST GRADATIES:
+   - Mild: lichte afwijking
+   - Matig: duidelijke afwijking
+   - Ernstig: sterke afwijking
+   - Controleer of ernst overeenkomt met metingen
+
+REGELS:
+- Behoud ALLE genoemde cijfers exact
+- Pas alleen beschrijvende termen aan voor consistentie
+- Gebruik medisch correcte terminologie
+- Zorg voor fysiologische logica
+
+Geef het gecorrigeerde verslag terug."""},
+            {"role": "user", "content": f"Transcriptie:\n{corrected}\n\nVerslag:\n{structured}"}
         ])
 
-        # 6) ESC/AHA-advies
+        # 6) Finale validatie op onnauwkeurigheden
+        validation = call_gpt([
+            {"role": "system", "content": (
+                "Finale controle: verwijder niet in transcriptie vermelde data en controleer op resterende inconsistenties. "
+                "Behoud alle genoemde cijfers en metingen exact zoals vermeld."
+            )},
+            {"role": "user",   "content": f"Transcriptie:\n{corrected}\n\nVerslag:\n{consistency_check}"}
+        ])
+
+        # 7) ESC/AHA-advies
         advice = ""
         if verslag_type in ['consult', 'raadpleging', 'spoedconsult']:
             advice = call_gpt([
@@ -411,7 +450,7 @@ Beleid:
                 {"role": "user", "content": validation}
             ])
 
-        # 7) Render output
+        # 8) Render output
         if verslag_type in ['TTE', 'TEE']:
             return render_template('index.html', transcript=validation)
         return render_template('index.html', transcript=validation, advies=advice)
