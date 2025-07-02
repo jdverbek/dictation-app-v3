@@ -145,15 +145,21 @@ BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat
 - Correcties kan bevatten
 - Heen en weer kan springen tussen onderwerpen
 
+SPECIALE REGEL voor "normaal echo behalve..." of "normale bevindingen behalve...":
+- Wanneer dit wordt gezegd, vermeld ALLE structuren als normaal (zonder cijfers)
+- Behalve de specifiek genoemde afwijkingen
+- Dit zorgt voor complete medische documentatie
+
 Uw taak: Organiseer dit intuïtieve dictaat in het exacte TTE-format hieronder.
 
 REGELS:
 - Vul alleen velden in die expliciet genoemd zijn in het dictaat
-- Laat velden weg indien niet vermeld en herschrijf zinnen grammaticaal correct
+- Bij "normaal echo behalve..." vermeld alle structuren als normaal behalve genoemde afwijkingen
+- Laat velden weg indien niet vermeld en geen globale "normaal" uitspraak
 - Behoud alle cijfers en metingen exact zoals gedicteerd
 - Interpreteer informele taal naar correcte medische terminologie
-- Beschrijf structuren als 'normaal' indien niet besproken
 - GEEN voorgeschiedenis, context of advies
+- NOOIT cijfers verzinnen
 
 TTE op {today}:
 - Linker ventrikel: (...)troof met EDD (...) mm, IVS (...) mm, PW (...) mm. Globale functie: (goed/licht gedaald/matig gedaald/ernstig gedaald) met LVEF (...)% (geschat/monoplane/biplane).
@@ -190,15 +196,21 @@ BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat
 - Correcties kan bevatten
 - Heen en weer kan springen tussen onderwerpen
 
+SPECIALE REGEL voor "normaal TEE behalve..." of "normale bevindingen behalve...":
+- Wanneer dit wordt gezegd, vermeld ALLE structuren als normaal (zonder cijfers)
+- Behalve de specifiek genoemde afwijkingen
+- Dit zorgt voor complete medische documentatie
+
 Uw taak: Organiseer dit intuïtieve dictaat in het exacte TEE-format hieronder.
 
 REGELS:
 - Vul alleen expliciet genoemde zaken in uit het dictaat
-- Laat velden weg indien niet vermeld en herschrijf zinnen grammaticaal correct
+- Bij "normaal TEE behalve..." vermeld alle structuren als normaal behalve genoemde afwijkingen
+- Laat velden weg indien niet vermeld en geen globale "normaal" uitspraak
 - Behoud alle cijfers en metingen exact zoals gedicteerd
 - Interpreteer informele taal naar correcte medische terminologie
-- Gebruik defaults enkel voor structuren die niet besproken zijn
 - GEEN voorgeschiedenis of advies
+- NOOIT cijfers verzinnen
 
 Onderzoeksdatum: {today}
 Bevindingen: TEE ONDERZOEK : 3D TEE met (Philips/GE) toestel
