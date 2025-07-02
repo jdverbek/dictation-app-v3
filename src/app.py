@@ -43,9 +43,11 @@ def transcribe():
                     prompt = "Dit is een medische dictatie in het Nederlands van een cardioloog. Transcribeer de volledige dictatie."
                 
                 try:
+                    # Convert FileStorage to the format expected by OpenAI
+                    audio_file.seek(0)  # Reset file pointer to beginning
                     transcript = client.audio.transcriptions.create(
                         model="whisper-1",
-                        file=audio_file,
+                        file=(audio_file.filename, audio_file.read(), audio_file.content_type),
                         prompt=prompt,
                         temperature=0.0
                     )
