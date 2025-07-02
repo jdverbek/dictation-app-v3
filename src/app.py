@@ -22,6 +22,36 @@ def call_gpt(messages, model="gpt-4o", temperature=0.0):
     except Exception as e:
         return f"Error: {str(e)}"
 
+def detect_hallucination(structured_report, transcript):
+    """Detect potential hallucination in the structured report"""
+    
+    # Check for suspiciously specific measurements that might be fabricated
+    import re
+    
+    # Extract numbers from the structured report
+    numbers_in_report = re.findall(r'\d+(?:\.\d+)?', structured_report)
+    
+    # Extract numbers from the original transcript
+    numbers_in_transcript = re.findall(r'\d+(?:\.\d+)?', transcript)
+    
+    # Count how many numbers in report are NOT in transcript
+    fabricated_numbers = 0
+    for num in numbers_in_report:
+        if num not in numbers_in_transcript:
+            fabricated_numbers += 1
+    
+    # If more than 50% of numbers are fabricated, likely hallucination
+    if len(numbers_in_report) > 0:
+        fabrication_ratio = fabricated_numbers / len(numbers_in_report)
+        if fabrication_ratio > 0.5:
+            return True, f"Mogelijk hallucinatie gedetecteerd: {fabricated_numbers}/{len(numbers_in_report)} cijfers niet in origineel dictaat"
+    
+    # Check for suspiciously complete data (all fields filled with specific values)
+    if "niet vermeld" not in structured_report and len(numbers_in_report) > 15:
+        return True, "Mogelijk hallucinatie: verdacht complete data zonder 'niet vermeld' velden"
+    
+    return False, None
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -71,57 +101,58 @@ BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat
 - Correcties kan bevatten
 - Heen en weer kan springen tussen onderwerpen
 
-Uw taak: Analyseer het dictaat en vul het TTE-template in met de WERKELIJKE BEVINDINGEN.
+KRITIEKE VEILIGHEIDSREGEL: VERZIN GEEN MEDISCHE GEGEVENS!
 
-KRITIEK: 
-- VERVANG ALLE (...) met werkelijke gegevens uit het dictaat
-- Als iets niet genoemd wordt, gebruik dan logische medische beschrijvingen
-- GEEN (...) in de finale output - vul alles in met echte data
-- Volg het template format EXACT regeltje per regeltje
-- GEEN extra tekst voor of na het template
-- GEEN "Verslag:" header - begin direct met "TTE op {today}:"
+Uw taak: Analyseer het dictaat en vul het TTE-template in met ALLEEN de WERKELIJK GENOEMDE BEVINDINGEN.
+
+ANTI-HALLUCINATIE REGELS:
+- ALLEEN gegevens gebruiken die EXPLICIET in het dictaat staan
+- GEEN cijfers verzinnen die niet letterlijk genoemd zijn
+- GEEN medische details toevoegen die niet gedicteerd zijn
+- Bij twijfel: gebruik "niet vermeld" in plaats van een getal te verzinnen
+- VEILIGHEID EERST: beter incomplete data dan verzonnen data
 
 REGELS VOOR INVULLEN:
-1. WERKELIJKE METINGEN: Gebruik exacte cijfers zoals gedicteerd (bijv. EDD 52 mm, LVEF 65%)
-2. WERKELIJKE BESCHRIJVINGEN: Gebruik echte bevindingen (bijv. "eutroof", "gedilateerd", "prolaps")
-3. LOGISCHE DEFAULTS: Als niet genoemd, gebruik medisch logische beschrijvingen:
-   - Voor normale structuren: "eutroof", "normaal", "geen"
-   - Voor functie: "goed", "normaal" 
-   - Voor kleppen: "morfologisch normaal", "geen insufficiëntie"
-4. GEEN (...) BEHOUDEN - vervang alles met echte gegevens
+1. EXPLICIET GENOEMDE METINGEN: Gebruik ALLEEN cijfers die letterlijk gedicteerd zijn
+2. EXPLICIET GENOEMDE BESCHRIJVINGEN: Gebruik ALLEEN bevindingen die echt genoemd zijn
+3. NIET GENOEMDE ITEMS: Gebruik "niet vermeld" of laat leeg
+4. GEEN GISSINGEN: Verzin geen "logische" waarden
+5. MEDISCHE VEILIGHEID: Verkeerde data is gevaarlijker dan ontbrekende data
 
-VOORBEELD INVULLING:
-- Linker ventrikel: eutroof met EDD 52 mm, IVS 10 mm, PW 9 mm. Globale functie: goed met LVEF 65% geschat
-- Mitralisklep: morfologisch prolaps. insufficiëntie: gering ; stenose: geen
-- Atria: LA gedilateerd 45 mm, 65 mL, RA 35 mL
+VOORBEELD VEILIGE INVULLING:
+- Linker ventrikel: niet vermeld met EDD niet vermeld, IVS niet vermeld, PW niet vermeld. Globale functie: goed met LVEF 65% geschat
+- Mitralisklep: morfologisch prolaps. insufficiëntie: gering ; stenose: niet vermeld
+- Atria: LA gedilateerd 45 mm, volume niet vermeld, RA niet vermeld
 
-TEMPLATE STRUCTUUR (VUL IN MET ECHTE DATA):
+TEMPLATE STRUCTUUR (VUL ALLEEN IN WAT ECHT GEDICTEERD IS):
 
 TTE op {today}:
-- Linker ventrikel: [vul in met echte data] met EDD [cijfer] mm, IVS [cijfer] mm, PW [cijfer] mm. Globale functie: [echte beoordeling] met LVEF [cijfer]% [methode]
-- Regionaal: [echte bevinding]
-- Rechter ventrikel: [echte data], globale functie: [echte beoordeling] met TAPSE [cijfer] mm en RV S' [cijfer] cm/s
-- Diastole: [echte beoordeling] met E [cijfer] cm/s, A [cijfer] cm/s, E DT [cijfer] ms, E' septaal [cijfer] cm/s, E/E' [cijfer]. L-golf: [ja/neen]
-- Atria: LA [echte beoordeling] [cijfer] mm, [cijfer] mL, RA [cijfer] mL
-- Aortadimensies: sinus [cijfer] mm, sinotubulair [cijfer] mm, ascendens [cijfer] mm
-- Mitralisklep: morfologisch [echte bevinding]. insufficiëntie: [echte graad] ; stenose: [echte bevinding]
-- Aortaklep: [tricuspied/bicuspied], morfologisch [echte bevinding]. Functioneel: [echte bevinding]
-- Pulmonalisklep: insufficiëntie: [echte graad] ; stenose: [echte bevinding]
-- Tricuspiedklep: insufficiëntie: [echte graad] ; geschatte RVSP: [cijfer] mmHg + CVD [cijfer] mmHg gezien vena cava inferior: [cijfer] mm, variabiliteit: [echte bevinding]
-- Pericard: [echte bevinding]
+- Linker ventrikel: [ALLEEN als genoemd] met EDD [ALLEEN als genoemd] mm, IVS [ALLEEN als genoemd] mm, PW [ALLEEN als genoemd] mm. Globale functie: [ALLEEN als genoemd] met LVEF [ALLEEN als genoemd]% [ALLEEN als genoemd]
+- Regionaal: [ALLEEN als genoemd]
+- Rechter ventrikel: [ALLEEN als genoemd], globale functie: [ALLEEN als genoemd] met TAPSE [ALLEEN als genoemd] mm en RV S' [ALLEEN als genoemd] cm/s
+- Diastole: [ALLEEN als genoemd] met E [ALLEEN als genoemd] cm/s, A [ALLEEN als genoemd] cm/s, E DT [ALLEEN als genoemd] ms, E' septaal [ALLEEN als genoemd] cm/s, E/E' [ALLEEN als genoemd]. L-golf: [ALLEEN als genoemd]
+- Atria: LA [ALLEEN als genoemd] [ALLEEN als genoemd] mm, [ALLEEN als genoemd] mL, RA [ALLEEN als genoemd] mL
+- Aortadimensies: sinus [ALLEEN als genoemd] mm, sinotubulair [ALLEEN als genoemd] mm, ascendens [ALLEEN als genoemd] mm
+- Mitralisklep: morfologisch [ALLEEN als genoemd]. insufficiëntie: [ALLEEN als genoemd] ; stenose: [ALLEEN als genoemd]
+- Aortaklep: [ALLEEN als genoemd], morfologisch [ALLEEN als genoemd]. Functioneel: [ALLEEN als genoemd]
+- Pulmonalisklep: insufficiëntie: [ALLEEN als genoemd] ; stenose: [ALLEEN als genoemd]
+- Tricuspiedklep: insufficiëntie: [ALLEEN als genoemd] ; geschatte RVSP: [ALLEEN als genoemd] mmHg + CVD [ALLEEN als genoemd] mmHg gezien vena cava inferior: [ALLEEN als genoemd] mm, variabiliteit: [ALLEEN als genoemd]
+- Pericard: [ALLEEN als genoemd]
 
 Recente biochemie op {today}:
-- Hb [cijfer] g/dL
-- Creatinine [cijfer] mg/dL en eGFR [cijfer] mL/min
-- LDL [cijfer] mg/dL
-- HbA1c [cijfer]%
+- Hb [ALLEEN als genoemd] g/dL
+- Creatinine [ALLEEN als genoemd] mg/dL en eGFR [ALLEEN als genoemd] mL/min
+- LDL [ALLEEN als genoemd] mg/dL
+- HbA1c [ALLEEN als genoemd]%
 
-Conclusie: [echte conclusie gebaseerd op bevindingen]
+Conclusie: [ALLEEN gebaseerd op werkelijk genoemde bevindingen]
 
 Beleid:
-- Medicatie ongewijzigd/gewijzigd: [echte aanbeveling]
-- Bijkomende investigaties: [echte aanbeveling]
-- Controle over [cijfer] maand
+- Medicatie: [ALLEEN als genoemd]
+- Bijkomende investigaties: [ALLEEN als genoemd]
+- Controle: [ALLEEN als genoemd]
+
+VEILIGHEIDSCHECK: Controleer of elk cijfer en elke bevinding ECHT in het dictaat staat!
 """
         else:
             # Default template for other types
@@ -153,6 +184,16 @@ Gebruik professionele medische terminologie en structuur.
         
         if template_start >= 0:
             structured = '\n'.join(lines[template_start:])
+
+        # Check for hallucination
+        is_hallucination, hallucination_msg = detect_hallucination(structured, corrected_transcript)
+        
+        if is_hallucination:
+            # If hallucination detected, show warning and original transcript
+            error_msg = f"🚨 Mogelijk hallucinatie gedetecteerd!\n\n{hallucination_msg}\n\nHet systeem heeft mogelijk medische gegevens verzonnen die niet in het originele dictaat stonden. Controleer het originele dictaat hieronder en probeer opnieuw met een duidelijker opname.\n\nOrigineel dictaat:\n{corrected_transcript}"
+            return render_template('index.html', 
+                                 error=error_msg,
+                                 verslag_type=verslag_type)
 
         return render_template('index.html', 
                              transcript=corrected_transcript,
