@@ -105,45 +105,49 @@ KRITIEKE VEILIGHEIDSREGEL: VERZIN GEEN MEDISCHE GEGEVENS!
 
 Uw taak: Analyseer het dictaat en vul het TTE-template in met ALLEEN de WERKELIJK GENOEMDE BEVINDINGEN.
 
+TEMPLATE STRUCTUUR REGELS:
+- BEHOUD ALLE TEMPLATE LIJNEN - laat geen enkele regel weg
+- Voor elke lijn: vul alleen in wat expliciet genoemd is
+- Voor niet-genoemde parameters: laat die specifieke parameter weg (schrijf NIET "niet vermeld")
+- Gebruik logische medische beschrijvingen voor algemene bevindingen
+
 ANTI-HALLUCINATIE REGELS:
 - ALLEEN gegevens gebruiken die EXPLICIET in het dictaat staan
 - GEEN cijfers verzinnen die niet letterlijk genoemd zijn
 - GEEN medische details toevoegen die niet gedicteerd zijn
-- Bij twijfel: gebruik "niet vermeld" in plaats van een getal te verzinnen
 - VEILIGHEID EERST: beter incomplete data dan verzonnen data
 
-REGELS VOOR INVULLEN:
-1. EXPLICIET GENOEMDE METINGEN: Gebruik ALLEEN cijfers die letterlijk gedicteerd zijn
-2. EXPLICIET GENOEMDE BESCHRIJVINGEN: Gebruik ALLEEN bevindingen die echt genoemd zijn
-3. NIET GENOEMDE ITEMS: Gebruik "niet vermeld" of laat leeg
-4. GEEN GISSINGEN: Verzin geen "logische" waarden
-5. MEDISCHE VEILIGHEID: Verkeerde data is gevaarlijker dan ontbrekende data
+VOORBEELDEN VAN CORRECTE INVULLING:
 
-VOORBEELD VEILIGE INVULLING:
-- Linker ventrikel: niet vermeld met EDD niet vermeld, IVS niet vermeld, PW niet vermeld. Globale functie: goed met LVEF 65% geschat
-- Mitralisklep: morfologisch prolaps. insufficiëntie: gering ; stenose: niet vermeld
-- Atria: LA gedilateerd 45 mm, volume niet vermeld, RA niet vermeld
+Als EDD niet genoemd:
+- Linker ventrikel: eutroof. Globale functie: goed met LVEF 65% geschat
 
-TEMPLATE STRUCTUUR (VUL ALLEEN IN WAT ECHT GEDICTEERD IS):
+Als alleen prolaps genoemd:
+- Mitralisklep: morfologisch prolaps. insufficiëntie: gering
+
+Als geen specifieke dimensies genoemd:
+- Aortadimensies: normaal
+
+VOLLEDIGE TEMPLATE STRUCTUUR (BEHOUD ALLE LIJNEN):
 
 TTE op {today}:
-- Linker ventrikel: [ALLEEN als genoemd] met EDD [ALLEEN als genoemd] mm, IVS [ALLEEN als genoemd] mm, PW [ALLEEN als genoemd] mm. Globale functie: [ALLEEN als genoemd] met LVEF [ALLEEN als genoemd]% [ALLEEN als genoemd]
-- Regionaal: [ALLEEN als genoemd]
-- Rechter ventrikel: [ALLEEN als genoemd], globale functie: [ALLEEN als genoemd] met TAPSE [ALLEEN als genoemd] mm en RV S' [ALLEEN als genoemd] cm/s
-- Diastole: [ALLEEN als genoemd] met E [ALLEEN als genoemd] cm/s, A [ALLEEN als genoemd] cm/s, E DT [ALLEEN als genoemd] ms, E' septaal [ALLEEN als genoemd] cm/s, E/E' [ALLEEN als genoemd]. L-golf: [ALLEEN als genoemd]
-- Atria: LA [ALLEEN als genoemd] [ALLEEN als genoemd] mm, [ALLEEN als genoemd] mL, RA [ALLEEN als genoemd] mL
-- Aortadimensies: sinus [ALLEEN als genoemd] mm, sinotubulair [ALLEEN als genoemd] mm, ascendens [ALLEEN als genoemd] mm
-- Mitralisklep: morfologisch [ALLEEN als genoemd]. insufficiëntie: [ALLEEN als genoemd] ; stenose: [ALLEEN als genoemd]
-- Aortaklep: [ALLEEN als genoemd], morfologisch [ALLEEN als genoemd]. Functioneel: [ALLEEN als genoemd]
-- Pulmonalisklep: insufficiëntie: [ALLEEN als genoemd] ; stenose: [ALLEEN als genoemd]
-- Tricuspiedklep: insufficiëntie: [ALLEEN als genoemd] ; geschatte RVSP: [ALLEEN als genoemd] mmHg + CVD [ALLEEN als genoemd] mmHg gezien vena cava inferior: [ALLEEN als genoemd] mm, variabiliteit: [ALLEEN als genoemd]
-- Pericard: [ALLEEN als genoemd]
+- Linker ventrikel: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
+- Regionaal: [vul in wat genoemd is]
+- Rechter ventrikel: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
+- Diastole: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
+- Atria: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
+- Aortadimensies: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
+- Mitralisklep: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
+- Aortaklep: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
+- Pulmonalisklep: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
+- Tricuspiedklep: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
+- Pericard: [vul in wat genoemd is]
 
 Recente biochemie op {today}:
-- Hb [ALLEEN als genoemd] g/dL
-- Creatinine [ALLEEN als genoemd] mg/dL en eGFR [ALLEEN als genoemd] mL/min
-- LDL [ALLEEN als genoemd] mg/dL
-- HbA1c [ALLEEN als genoemd]%
+- Hb [alleen als genoemd]
+- Creatinine [alleen als genoemd] en eGFR [alleen als genoemd]
+- LDL [alleen als genoemd]
+- HbA1c [alleen als genoemd]
 
 Conclusie: [ALLEEN gebaseerd op werkelijk genoemde bevindingen]
 
