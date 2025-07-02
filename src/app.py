@@ -29,6 +29,15 @@ def quality_control_review(structured_report, original_transcript):
 Je bent een ervaren cardioloog die een tweede review doet van een TTE-verslag. 
 Controleer het verslag op de volgende punten:
 
+CORRECTE MEDISCHE NEDERLANDSE TERMINOLOGIE (PRIORITEIT!):
+- Corrigeer ALLE incorrecte samengestelde woorden:
+  ❌ 'pulmonaardruk' → ✅ 'pulmonale druk'
+  ❌ 'posteriorklepplat' → ✅ 'posterieur mitraalklepblad'
+  ❌ 'tricuspiedklep' → ✅ 'tricuspidalisklep'
+  ❌ 'mitraalsklep' → ✅ 'mitralisklep'
+  ❌ 'aortaklep' → ✅ 'aortaklep'
+- Gebruik ALTIJD correcte medische Nederlandse terminologie
+
 MEDISCHE CONSISTENTIE:
 - Zijn de metingen medisch logisch? (bijv. LVEF vs functie beschrijving)
 - Zijn er tegenstrijdigheden tussen verschillende secties?
@@ -56,6 +65,7 @@ BELANGRIJK:
 - Behoud de exacte template structuur
 - Voeg GEEN nieuwe medische gegevens toe die niet in het origineel stonden
 - Corrigeer alleen echte fouten en inconsistenties
+- CORRIGEER ALTIJD incorrecte terminologie naar correcte medische Nederlandse termen
 - Geef ALLEEN het gecorrigeerde verslag terug, geen uitleg
 
 Origineel dictaat voor referentie:
@@ -183,6 +193,18 @@ BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat
 
 KRITIEKE VEILIGHEIDSREGEL: VERZIN GEEN MEDISCHE GEGEVENS!
 
+CORRECTE MEDISCHE NEDERLANDSE TERMINOLOGIE:
+- Gebruik ALTIJD correcte medische Nederlandse termen
+- GEEN samengestelde woorden zoals 'pulmonaardruk' → gebruik 'pulmonale druk'
+- GEEN 'posteriorklepplat' → gebruik 'posterieur mitraalklepblad'
+- GEEN 'tricuspiedklep' → gebruik 'tricuspidalisklep'
+- GEEN 'mitraalsklep' → gebruik 'mitralisklep'
+- GEEN 'aortaklep' → gebruik 'aortaklep'
+
+CORRECTE TERMINOLOGIE VOORBEELDEN:
+❌ FOUT: pulmonaardruk, posteriorklepplat, tricuspiedklep
+✅ CORRECT: pulmonale druk, posterieur mitraalklepblad, tricuspidalisklep
+
 Uw taak: Analyseer het dictaat en vul het TTE-template in met ALLEEN de WERKELIJK GENOEMDE BEVINDINGEN.
 
 TEMPLATE STRUCTUUR REGELS:
@@ -190,12 +212,14 @@ TEMPLATE STRUCTUUR REGELS:
 - Voor elke lijn: geef een medische beschrijving gebaseerd op wat genoemd is
 - Voor specifieke parameters (cijfers): alleen invullen als expliciet genoemd
 - Voor algemene beschrijvingen: gebruik logische medische termen
+- GEBRUIK ALTIJD CORRECTE MEDISCHE NEDERLANDSE TERMINOLOGIE
 
 INVUL REGELS:
-1. EXPLICIET GENOEMDE AFWIJKINGEN: Vul exact in zoals gedicteerd
+1. EXPLICIET GENOEMDE AFWIJKINGEN: Vul exact in zoals gedicteerd MAAR met correcte terminologie
 2. NIET GENOEMDE STRUCTUREN: Gebruik "normaal" of "eutroof" 
 3. SPECIFIEKE CIJFERS: Alleen als letterlijk genoemd (EDD, LVEF, etc.)
 4. ALGEMENE FUNCTIE: Afleiden uit context ("normale echo" = goede functie)
+5. TERMINOLOGIE: Altijd correcte medische Nederlandse termen gebruiken
 
 VOORBEELDEN VAN CORRECTE INVULLING:
 
@@ -224,7 +248,7 @@ TTE op {today}:
 - Mitralisklep: [morfologisch normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
 - Aortaklep: [tricuspied, morfologisch normaal als niet anders vermeld]
 - Pulmonalisklep: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
-- Tricuspiedklep: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Tricuspidalisklep: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
 - Pericard: [normaal als niet anders vermeld]
 
 Recente biochemie op {today}:
@@ -236,6 +260,7 @@ Beleid:
 [Alleen invullen als expliciet genoemd in dictaat]
 
 VEILIGHEIDSCHECK: Elk cijfer moet ECHT in het dictaat staan!
+TERMINOLOGIE CHECK: Gebruik ALLEEN correcte medische Nederlandse termen!
 """
         else:
             # Default template for other types
