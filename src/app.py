@@ -169,18 +169,17 @@ LOGISCHE CONSISTENTIE REGELS:
 Uw taak: Organiseer dit intuïtieve dictaat in het exacte TTE-format hieronder.
 
 REGELS:
+- Volg het template format EXACT regeltje per regeltje
 - Vul alle velden in - laat GEEN lijnen weg van de template
 - Bij specifieke metingen: gebruik exacte cijfers zoals gedicteerd
-- Bij "normaal echo behalve..." of geen specifieke metingen: gebruik natuurlijke beschrijvingen:
-  * "LV: eutroof, niet gedilateerd met normale functie (EF > 55%) zonder regionale kinetiekstoornissen"
-  * "RV: eutroof, niet gedilateerd met normale functie"
-  * "Atria: niet gedilateerd"
-  * "Kleppen: morfologisch en functioneel normaal"
+- Bij "normaal echo behalve..." of geen specifieke metingen: gebruik natuurlijke beschrijvingen binnen de template structuur:
+  * Voor LV lijn: "eutroof, niet gedilateerd met normale functie (EF > 55%)" 
+  * Voor kleppen: "morfologisch en functioneel normaal"
 - Behoud alle cijfers en metingen exact zoals gedicteerd
 - Interpreteer informele taal naar correcte medische terminologie
 - GEEN voorgeschiedenis, context of advies
 - NOOIT cijfers verzinnen
-- Alle structuren vermelden, maar natuurlijke medische taal gebruiken
+- Template structuur exact volgen, maar natuurlijke medische taal gebruiken
 
 TTE op {today}:
 - Linker ventrikel: (...)troof met EDD (...) mm, IVS (...) mm, PW (...) mm. Globale functie: (goed/licht gedaald/matig gedaald/ernstig gedaald) met LVEF (...)% (geschat/monoplane/biplane).
@@ -225,18 +224,17 @@ SPECIALE REGEL voor "normaal TEE behalve..." of "normale bevindingen behalve..."
 Uw taak: Organiseer dit intuïtieve dictaat in het exacte TEE-format hieronder.
 
 REGELS:
+- Volg het template format EXACT regeltje per regeltje
 - Vul alle velden in - laat GEEN lijnen weg van de template
 - Bij specifieke metingen: gebruik exacte cijfers zoals gedicteerd
-- Bij "normaal TEE behalve..." of geen specifieke metingen: gebruik natuurlijke beschrijvingen:
-  * "LV: eutroof, niet gedilateerd, normale contractiliteit zonder wandbewegingstoornissen"
-  * "RV: eutroof, niet gedilateerd, normale contractiliteit"
-  * "Atria: niet gedilateerd"
-  * "Kleppen: morfologisch en functioneel normaal"
+- Bij "normaal TEE behalve..." of geen specifieke metingen: gebruik natuurlijke beschrijvingen binnen de template structuur:
+  * Voor LV lijn: "eutroof, niet gedilateerd, normale contractiliteit zonder wandbewegingstoornissen"
+  * Voor kleppen: "morfologisch en functioneel normaal"
 - Behoud alle cijfers en metingen exact zoals gedicteerd
 - Interpreteer informele taal naar correcte medische terminologie
 - GEEN voorgeschiedenis of advies
 - NOOIT cijfers verzinnen
-- Alle structuren vermelden, maar natuurlijke medische taal gebruiken
+- Template structuur exact volgen, maar natuurlijke medische taal gebruiken
 
 Onderzoeksdatum: {today}
 Bevindingen: TEE ONDERZOEK : 3D TEE met (Philips/GE) toestel
