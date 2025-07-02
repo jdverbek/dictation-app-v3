@@ -264,8 +264,10 @@ BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat
 
 SPECIALE AANDACHT:
 - Als echo bevindingen genoemd worden, maak een aparte "Echocardiografie" sectie
-- Geef SPECIFIEKE medicatie aanbevelingen met doseringen indien genoemd
-- Vermijd vage aanbevelingen zoals "aanpassing medicatie" - wees specifiek
+- MEDISCHE VEILIGHEID: Vermeld ALLEEN medicatie die expliciet genoemd werd in dictaat
+- GEEN automatische medicatie suggesties - dit is gevaarlijk
+- Voor medicatie aanbevelingen: verwijs naar ESC/AHA richtlijnen
+- Voorgeschiedenis is essentieel - neem op indien genoemd
 
 Uw taak: Organiseer dit intuïtieve dictaat in het exacte spoedconsult-format hieronder.
 
@@ -275,11 +277,18 @@ REGELS:
 - Laat secties weg indien geen data beschikbaar
 - Zet informele taal om naar correcte medische terminologie
 - Echo bevindingen in aparte sectie indien genoemd
-- Specifieke medicatie aanbevelingen
+- MEDISCHE VEILIGHEID: Geen medicatie suggesties, alleen wat expliciet genoemd werd
+- Voorgeschiedenis opnemen indien vermeld
 
 Spoedconsult cardiologie op {today}
 
 Reden van komst: (exacte tekst uit transcriptie)
+
+Voorgeschiedenis: (indien genoemd in dictaat)
+- Cardiovasculaire voorgeschiedenis: (...)
+- Medicatie: (huidige medicatie indien genoemd)
+- Allergieën: (indien genoemd)
+- Overige relevante voorgeschiedenis: (...)
 
 Anamnese:
 Thoracale last ja/neen: welk soort pijn (scheurend, druk, messteken), uitstraling, hoe lang, beïnvloeding door ademhaling etc
@@ -318,11 +327,10 @@ Conclusie:
 (Medische interpretatie van bevindingen)
 
 Beleid:
-Medicatie: (SPECIFIEKE medicatie met doseringen indien genoemd, anders "zie aanbevelingen")
-- ACE-remmer/ARB: (specifieke medicatie en dosering)
-- Bètablokker: (specifieke medicatie en dosering)
-- Diuretica: (specifieke medicatie en dosering)
-- Anticoagulatie: (specifieke medicatie en dosering)
+Medicatie: (ALLEEN indien specifiek genoemd in dictaat, anders "zie ESC/AHA aanbevelingen")
+- Vermeld alleen medicatie die expliciet in het dictaat genoemd werd
+- GEEN automatische medicatie suggesties - dit is medisch onveilig
+- Voor medicatie aanbevelingen: verwijs naar ESC/AHA richtlijnen
 
 Bijkomende investigaties: (specifieke onderzoeken indien genoemd)
 Opvolging: (specifieke termijnen en parameters indien genoemd)
