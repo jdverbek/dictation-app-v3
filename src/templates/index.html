@@ -45,7 +45,7 @@
   </form>
 
   <h2>Verslag</h2>
-  <textarea id="verslagText" readonly>{{ transcript }}</textarea>
+  <textarea id="verslagText" readonly>{{ structured or transcript }}</textarea>
   <button class="copy-button" onclick="copyToClipboard('verslagText')">📋 Kopieer verslag</button>
 
   {% if advies %}

@@ -71,8 +71,12 @@ BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat
 
 Uw taak: Organiseer dit intuïtieve dictaat in het EXACTE TTE-format hieronder.
 
-KRITIEK: Volg het template EXACT - GEEN vrije tekst, GEEN genummerde lijsten, GEEN narratieve beschrijving.
-Gebruik ALLEEN de exacte template structuur hieronder.
+KRITIEK: 
+- Volg het template EXACT - GEEN vrije tekst, GEEN genummerde lijsten, GEEN narratieve beschrijving
+- Gebruik ALLEEN de exacte template structuur hieronder
+- GEEN extra tekst voor of na het template
+- GEEN "Verslag:" header - begin direct met "TTE op {today}:"
+- GEEN procesdetails of uitleg - ALLEEN het template
 
 REGELS:
 - Volg het template format EXACT regeltje per regeltje
@@ -83,6 +87,8 @@ REGELS:
 - GEEN genummerde lijsten - ALLEEN template format
 - Behoud alle cijfers en metingen exact zoals gedicteerd
 - Interpreteer informele taal naar correcte medische terminologie
+
+BEGIN DIRECT MET:
 
 TTE op {today}:
 - Linker ventrikel: (...)troof met EDD (...) mm, IVS (...) mm, PW (...) mm. Globale functie: (goed/licht gedaald/matig gedaald/ernstig gedaald) met LVEF (...)% (geschat/monoplane/biplane)
@@ -125,6 +131,21 @@ Gebruik professionele medische terminologie en structuur.
             {"role": "system", "content": template_instruction},
             {"role": "user", "content": corrected_transcript}
         ])
+        
+        # Clean the output to ensure only the template format is returned
+        if "Verslag:" in structured:
+            structured = structured.split("Verslag:")[-1].strip()
+        
+        # Remove any processing details that might appear before the template
+        lines = structured.split('\n')
+        template_start = -1
+        for i, line in enumerate(lines):
+            if line.strip().startswith('TTE op') or line.strip().startswith('TEE op') or line.strip().startswith('Spoedconsult'):
+                template_start = i
+                break
+        
+        if template_start >= 0:
+            structured = '\n'.join(lines[template_start:])
 
         return render_template('index.html', 
                              transcript=corrected_transcript,
