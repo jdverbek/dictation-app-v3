@@ -128,56 +128,55 @@ Uw taak: Analyseer het dictaat en vul het TTE-template in met ALLEEN de WERKELIJ
 
 TEMPLATE STRUCTUUR REGELS:
 - BEHOUD ALLE TEMPLATE LIJNEN - laat geen enkele regel weg
-- Voor elke lijn: vul alleen in wat expliciet genoemd is
-- Voor niet-genoemde parameters: laat die specifieke parameter weg (schrijf NIET "niet vermeld")
-- Gebruik logische medische beschrijvingen voor algemene bevindingen
+- Voor elke lijn: geef een medische beschrijving gebaseerd op wat genoemd is
+- Voor specifieke parameters (cijfers): alleen invullen als expliciet genoemd
+- Voor algemene beschrijvingen: gebruik logische medische termen
 
-ANTI-HALLUCINATIE REGELS:
-- ALLEEN gegevens gebruiken die EXPLICIET in het dictaat staan
-- GEEN cijfers verzinnen die niet letterlijk genoemd zijn
-- GEEN medische details toevoegen die niet gedicteerd zijn
-- VEILIGHEID EERST: beter incomplete data dan verzonnen data
+INVUL REGELS:
+1. EXPLICIET GENOEMDE AFWIJKINGEN: Vul exact in zoals gedicteerd
+2. NIET GENOEMDE STRUCTUREN: Gebruik "normaal" of "eutroof" 
+3. SPECIFIEKE CIJFERS: Alleen als letterlijk genoemd (EDD, LVEF, etc.)
+4. ALGEMENE FUNCTIE: Afleiden uit context ("normale echo" = goede functie)
 
 VOORBEELDEN VAN CORRECTE INVULLING:
 
-Als EDD niet genoemd:
-- Linker ventrikel: eutroof. Globale functie: goed met LVEF 65% geschat
+Als "normale echo behalve..." gedicteerd:
+- Linker ventrikel: eutroof, globale functie goed
+- Regionaal: geen kinetiekstoornissen  
+- Rechter ventrikel: normaal, globale functie goed
 
-Als alleen prolaps genoemd:
-- Mitralisklep: morfologisch prolaps. insufficiëntie: gering
+Als specifieke afwijking genoemd:
+- Mitralisklep: morfologisch prolaps. insufficiëntie: spoortje
+- Atria: LA licht vergroot 51 mm
 
-Als geen specifieke dimensies genoemd:
-- Aortadimensies: normaal
+Als niets specifiek genoemd:
+- Aortaklep: tricuspied, morfologisch normaal. Functioneel: normaal
+- Pericard: normaal
 
-VOLLEDIGE TEMPLATE STRUCTUUR (BEHOUD ALLE LIJNEN):
+VOLLEDIGE TEMPLATE STRUCTUUR:
 
 TTE op {today}:
-- Linker ventrikel: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
-- Regionaal: [vul in wat genoemd is]
-- Rechter ventrikel: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
-- Diastole: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
-- Atria: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
-- Aortadimensies: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
-- Mitralisklep: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
-- Aortaklep: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
-- Pulmonalisklep: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
-- Tricuspiedklep: [vul in wat genoemd is, laat specifieke parameters weg als niet genoemd]
-- Pericard: [vul in wat genoemd is]
+- Linker ventrikel: [normaal/eutroof als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Regionaal: [geen kinetiekstoornissen als niet anders vermeld]
+- Rechter ventrikel: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Diastole: [normaal als niet anders vermeld, specifieke bevindingen als genoemd]
+- Atria: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Aortadimensies: [normaal als niet anders vermeld, specifieke metingen als genoemd]
+- Mitralisklep: [morfologisch normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Aortaklep: [tricuspied, morfologisch normaal als niet anders vermeld]
+- Pulmonalisklep: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Tricuspiedklep: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Pericard: [normaal als niet anders vermeld]
 
 Recente biochemie op {today}:
-- Hb [alleen als genoemd]
-- Creatinine [alleen als genoemd] en eGFR [alleen als genoemd]
-- LDL [alleen als genoemd]
-- HbA1c [alleen als genoemd]
+[Alleen invullen als biochemie expliciet genoemd in dictaat]
 
-Conclusie: [ALLEEN gebaseerd op werkelijk genoemde bevindingen]
+Conclusie: [Samenvatting van werkelijk genoemde afwijkingen]
 
 Beleid:
-- Medicatie: [ALLEEN als genoemd]
-- Bijkomende investigaties: [ALLEEN als genoemd]
-- Controle: [ALLEEN als genoemd]
+[Alleen invullen als expliciet genoemd in dictaat]
 
-VEILIGHEIDSCHECK: Controleer of elk cijfer en elke bevinding ECHT in het dictaat staat!
+VEILIGHEIDSCHECK: Elk cijfer moet ECHT in het dictaat staan!
 """
         else:
             # Default template for other types
