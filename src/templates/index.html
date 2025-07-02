@@ -92,8 +92,35 @@
           const dataTransfer = new DataTransfer();
           dataTransfer.items.add(file);
           
-          const fileInput = document.querySelector('input[name="audio_file"]');
-          fileInput.files = dataTransfer.files;
+          // Update both file inputs
+          const mainFileInput = document.querySelector('#uploadForm input[name="audio_file"]');
+          const recordFileInput = document.querySelector('#recordUploadForm input[name="audio_file"]');
+          
+          mainFileInput.files = dataTransfer.files;
+          recordFileInput.files = dataTransfer.files;
+          
+          // Update the recording form with current verslag type
+          const currentType = document.getElementById('verslag_type').value;
+          document.querySelector('#recordUploadForm input[name="verslag_type"]').value = currentType;
+          
+          // Show upload button for recorded audio
+          const uploadBtn = document.createElement('button');
+          uploadBtn.textContent = '📤 Upload opname';
+          uploadBtn.type = 'button';
+          uploadBtn.onclick = () => {
+            document.getElementById('uploadForm').submit();
+          };
+          uploadBtn.style.marginTop = '10px';
+          uploadBtn.style.width = '100%';
+          uploadBtn.style.padding = '10px';
+          uploadBtn.style.fontSize = '1em';
+          
+          // Remove existing upload button if present
+          const existingBtn = document.getElementById('uploadRecordingBtn');
+          if (existingBtn) existingBtn.remove();
+          
+          uploadBtn.id = 'uploadRecordingBtn';
+          preview.parentNode.insertBefore(uploadBtn, preview.nextSibling);
         };
 
         mediaRecorder.start();

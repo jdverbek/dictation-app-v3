@@ -408,6 +408,9 @@ Controleer het verslag op ALLE soorten medische inconsistenties en corrigeer ze:
    - LVEF "goed" met <50% → "gedaald"
    - IVC "normaal" met >21mm → "gedilateerd"
    - Klep "normaal" met significante regurgitatie → "afwijkend"
+   - Aorta "normaal" met ≥40mm → "gedilateerd"
+   - Aortawortel "normaal" met >37mm → "gedilateerd"
+   - Ascendens "normaal" met >40mm → "gedilateerd"
 
 3. FYSIOLOGISCHE LOGICA:
    - CVD vs IVC grootte en variabiliteit
