@@ -25,30 +25,51 @@ def call_gpt(messages, model="gpt-4o", temperature=0.0):
 def detect_hallucination(structured_report, transcript):
     """Detect potential hallucination in the structured report"""
     
-    # Check for suspiciously specific measurements that might be fabricated
     import re
     
-    # Extract numbers from the structured report
+    # Extract numbers from the structured report and transcript
     numbers_in_report = re.findall(r'\d+(?:\.\d+)?', structured_report)
-    
-    # Extract numbers from the original transcript
     numbers_in_transcript = re.findall(r'\d+(?:\.\d+)?', transcript)
     
-    # Count how many numbers in report are NOT in transcript
-    fabricated_numbers = 0
-    for num in numbers_in_report:
-        if num not in numbers_in_transcript:
-            fabricated_numbers += 1
+    # Convert to sets for better comparison
+    report_numbers = set(numbers_in_report)
+    transcript_numbers = set(numbers_in_transcript)
     
-    # If more than 50% of numbers are fabricated, likely hallucination
-    if len(numbers_in_report) > 0:
-        fabrication_ratio = fabricated_numbers / len(numbers_in_report)
-        if fabrication_ratio > 0.5:
-            return True, f"Mogelijk hallucinatie gedetecteerd: {fabricated_numbers}/{len(numbers_in_report)} cijfers niet in origineel dictaat"
+    # Count fabricated numbers (in report but not in transcript)
+    fabricated_numbers = len(report_numbers - transcript_numbers)
+    total_numbers = len(report_numbers)
     
-    # Check for suspiciously complete data (all fields filled with specific values)
-    if "niet vermeld" not in structured_report and len(numbers_in_report) > 15:
-        return True, "Mogelijk hallucinatie: verdacht complete data zonder 'niet vermeld' velden"
+    # More sophisticated hallucination detection
+    if total_numbers > 0:
+        fabrication_ratio = fabricated_numbers / total_numbers
+        
+        # Only flag as hallucination if:
+        # 1. High fabrication ratio (>70%) AND significant number of fabricated numbers (>5)
+        # 2. OR extremely high fabrication ratio (>90%) with any fabricated numbers
+        if (fabrication_ratio > 0.7 and fabricated_numbers > 5) or (fabrication_ratio > 0.9 and fabricated_numbers > 2):
+            return True, f"Mogelijk hallucinatie gedetecteerd: {fabricated_numbers}/{total_numbers} cijfers niet in origineel dictaat (ratio: {fabrication_ratio:.1%})"
+    
+    # Check for suspiciously repetitive patterns (classic hallucination sign)
+    lines = structured_report.split('\n')
+    repetitive_patterns = 0
+    for line in lines:
+        # Look for repetitive phrases or identical measurements across different structures
+        if 'normaal' in line.lower() and len(re.findall(r'normaal', line.lower())) > 2:
+            repetitive_patterns += 1
+    
+    if repetitive_patterns > 5:
+        return True, "Mogelijk hallucinatie: verdacht repetitieve patronen gedetecteerd"
+    
+    # Check for impossible medical combinations
+    if "LVEF 65%" in structured_report and "ernstig gedaalde functie" in structured_report:
+        return True, "Mogelijk hallucinatie: tegenstrijdige medische bevindingen"
+    
+    # If transcript is very short but report is very detailed, might be hallucination
+    transcript_words = len(transcript.split())
+    report_words = len(structured_report.split())
+    
+    if transcript_words < 20 and report_words > 200 and total_numbers > 10:
+        return True, f"Mogelijk hallucinatie: zeer kort dictaat ({transcript_words} woorden) maar uitgebreid verslag ({report_words} woorden)"
     
     return False, None
 
