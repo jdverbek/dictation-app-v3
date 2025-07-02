@@ -44,6 +44,12 @@
     <input type="file" name="audio_file" id="recordedAudioInput" />
   </form>
 
+  {% if error %}
+  <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; margin: 10px 0; border-radius: 5px;">
+    <strong>{{ error }}</strong>
+  </div>
+  {% endif %}
+
   <h2>Verslag</h2>
   <textarea id="verslagText" readonly>{{ structured or transcript }}</textarea>
   <button class="copy-button" onclick="copyToClipboard('verslagText')">📋 Kopieer verslag</button>
