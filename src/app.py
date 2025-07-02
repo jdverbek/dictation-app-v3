@@ -22,6 +22,65 @@ def call_gpt(messages, model="gpt-4o", temperature=0.0):
     except Exception as e:
         return f"Error: {str(e)}"
 
+def quality_control_review(structured_report, original_transcript):
+    """Perform quality control review of the structured report"""
+    
+    review_instruction = """
+Je bent een ervaren cardioloog die een tweede review doet van een TTE-verslag. 
+Controleer het verslag op de volgende punten:
+
+MEDISCHE CONSISTENTIE:
+- Zijn de metingen medisch logisch? (bijv. LVEF vs functie beschrijving)
+- Zijn er tegenstrijdigheden tussen verschillende secties?
+- Kloppen de verhoudingen tussen verschillende parameters?
+
+TEMPLATE VOLLEDIGHEID:
+- Zijn alle verplichte secties aanwezig?
+- Is de formatting correct en consistent?
+- Zijn er lege velden die ingevuld zouden moeten zijn?
+
+LOGISCHE COHERENTIE:
+- Klopt de conclusie met de bevindingen?
+- Is het beleid logisch gebaseerd op de bevindingen?
+- Zijn er missing links tussen bevindingen en conclusies?
+
+MEDISCHE VEILIGHEID:
+- Zijn er potentieel gevaarlijke inconsistenties?
+- Zijn kritieke bevindingen correct weergegeven?
+- Is de terminologie correct gebruikt?
+
+Als je fouten of inconsistenties vindt, corrigeer ze en geef het verbeterde verslag terug.
+Als alles correct is, geef het originele verslag terug zonder wijzigingen.
+
+BELANGRIJK: 
+- Behoud de exacte template structuur
+- Voeg GEEN nieuwe medische gegevens toe die niet in het origineel stonden
+- Corrigeer alleen echte fouten en inconsistenties
+- Geef ALLEEN het gecorrigeerde verslag terug, geen uitleg
+
+Origineel dictaat voor referentie:
+{original_transcript}
+
+Te reviewen verslag:
+{structured_report}
+
+Gecorrigeerd verslag:
+"""
+    
+    try:
+        reviewed_report = call_gpt([
+            {"role": "system", "content": review_instruction.format(
+                original_transcript=original_transcript,
+                structured_report=structured_report
+            )},
+            {"role": "user", "content": "Voer de quality control review uit."}
+        ])
+        
+        return reviewed_report.strip()
+    except Exception as e:
+        # If review fails, return original report
+        return structured_report
+
 def detect_hallucination(structured_report, transcript):
     """Detect potential hallucination in the structured report"""
     
@@ -208,6 +267,9 @@ Gebruik professionele medische terminologie en structuur.
         
         if template_start >= 0:
             structured = '\n'.join(lines[template_start:])
+
+        # Perform quality control review
+        structured = quality_control_review(structured, corrected_transcript)
 
         # Check for hallucination
         is_hallucination, hallucination_msg = detect_hallucination(structured, corrected_transcript)
