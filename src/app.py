@@ -295,26 +295,36 @@ INVUL REGELS:
 
 VOLLEDIGE TEE TEMPLATE STRUCTUUR:
 
-TEE op {today}:
-- Linker ventrikel: [normaal/eutroof als niet anders vermeld, specifieke afwijkingen als genoemd]
-- Rechter ventrikel: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
-- Linker atrium: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
-- Rechter atrium: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
-- Linker hartoor: [geen trombus als niet anders vermeld, specifieke bevindingen als genoemd]
-- Rechter hartoor: [geen trombus als niet anders vermeld, specifieke bevindingen als genoemd]
-- Interatriaal septum: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
-- Mitralisklep: [morfologisch normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
-- Aortaklep: [tricuspied, morfologisch normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
-- Pulmonalisklep: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
-- Tricuspidalisklep: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
-- Aorta ascendens: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
-- Vena cava inferior: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
-- Pulmonaalvenen: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+Onderzoeksdatum: {today}
+Bevindingen: TEE ONDERZOEK : 3D TEE met [toestel als genoemd, anders "niet vermeld"] toestel
+Indicatie: [alleen invullen als expliciet genoemd in dictaat]
+Afname mondeling consent: dr. Verbeke. Informed consent: patiënt kreeg uitleg over aard onderzoek, mogelijke resultaten en procedurele risico's en verklaart zich hiermee akkoord.
+Supervisie: dr [alleen invullen als genoemd]
+Verpleegkundige: [alleen invullen als genoemd]
+Anesthesist: dr. [alleen invullen als genoemd]
+Locatie: [alleen invullen als genoemd]
+Sedatie met [alleen invullen als genoemd] en topicale Xylocaine spray.
+[Vlotte/moeizame] introductie TEE probe, [Vlot/moeizaam] verloop van onderzoek zonder complicatie.
 
-Conclusie: [Samenvatting van werkelijk genoemde afwijkingen]
-
-Beleid:
-[Alleen invullen als expliciet genoemd in dictaat]
+VERSLAG:
+- Linker ventrikel is [eutroof/hypertroof als genoemd], [niet/mild/matig/ernstig] gedilateerd en [normocontractiel/licht hypocontractiel/matig hypocontractiel/ernstig hypocontractiel] [zonder/met] regionale wandbewegingstoornissen.
+- Rechter ventrikel is [eutroof/hypertroof als genoemd], [niet/mild/matig/ernstig] gedilateerd en [normocontractiel/licht hypocontractiel/matig hypocontractiel/ernstig hypocontractiel].
+- De atria zijn [niet/licht/matig/sterk] gedilateerd.
+- Linker hartoortje is [niet/wel] vergroot, er is [geen/beperkt] spontaan contrast, zonder toegevoegde structuur. Hartoortje snelheden [alleen cijfer als genoemd] cm/s.
+- Interatriaal septum [is intact met kleurendoppler en na contrasttoediening met Valsalva manoever/is intact met kleurendoppler maar zonder contrast/vertoont een PFO/vertoont een ASD].
+- Mitralisklep: [natieve klep/bioprothese/mechanische kunstklep], morfologisch [normaal/degeneratief/prolaps], er is [geen/lichte/matige/ernstige] insufficiëntie, er is [geen/lichte/matige/ernstige] stenose, [zonder/met] toegevoegde structuur.
+* Mitraalinsufficientie vena contracta [alleen als genoemd] mm, ERO [alleen als genoemd] mm2 en RVol [alleen als genoemd] ml/slag.
+- Aortaklep: [natieve klep/bioprothese/mechanische kunstklep], morfologisch [normaal/degeneratief/prolaps], [niet/mild/matig/ernstig] verkalkt, er is [geen/lichte/matige/ernstige] insufficiëntie, er is [geen/lichte/matige/ernstige] stenose [zonder/met] toegevoegde structuur.
+Dimensies: LVOT [alleen als genoemd] mm, aorta sinus [alleen als genoemd] mm, sinutubulaire junctie [alleen als genoemd] mm, aorta ascendens boven de sinutubulaire junctie [alleen als genoemd] mm.
+* Aortaklepinsufficientie vena contracta [alleen als genoemd] mm, ERO [alleen als genoemd] mm2 en RVol [alleen als genoemd] ml/slag.
+* Aortaklepstenose piekgradient [alleen als genoemd] mmHg en gemiddelde gradient [alleen als genoemd] mmHg, effectief klepoppervlak [alleen als genoemd] cm2.
+- Tricuspidalisklep: [natieve klep/bioprothese/mechanische kunstklep], morfologisch [normaal/degeneratief/prolaps], er is [geen/lichte/matige/ernstige] insufficiëntie, [zonder/met] toegevoegde structuur.
+* Systolische pulmonale druk afgeleid uit TI [alleen als genoemd] mmHg + CVD.
+- Pulmonalisklep is [normaal/sclerotisch], er is [geen/lichte/matige/ernstige] insufficiëntie.
+- Aorta ascendens is [niet/mild/matig/aneurysmatisch] gedilateerd, graad [I/II/III/IV/V] atheromatose van de aortawand.
+- Pulmonale arterie is [niet/mild/matig/aneurysmatisch] gedilateerd.
+- Vena cava inferior/levervenes zijn [niet/mild/matig/ernstig] verbreed [met/zonder] ademvariatie.
+- Pericard: er is [geen/mild/matig/uitgesproken] pericardvocht.
 
 VEILIGHEIDSCHECK: Elk cijfer moet ECHT in het dictaat staan!
 TERMINOLOGIE CHECK: Gebruik ALLEEN correcte medische Nederlandse termen!
