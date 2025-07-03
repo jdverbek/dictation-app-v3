@@ -262,6 +262,63 @@ Beleid:
 VEILIGHEIDSCHECK: Elk cijfer moet ECHT in het dictaat staan!
 TERMINOLOGIE CHECK: Gebruik ALLEEN correcte medische Nederlandse termen!
 """
+        elif verslag_type == 'TEE':
+            template_instruction = f"""
+BELANGRIJK: U krijgt een intuïtief dictaat van een TEE (transesofageale echocardiografie). Dit betekent dat de informatie:
+- Niet in de juiste volgorde staat
+- In informele bewoordingen kan zijn
+- Correcties kan bevatten
+- Heen en weer kan springen tussen onderwerpen
+
+KRITIEKE VEILIGHEIDSREGEL: VERZIN GEEN MEDISCHE GEGEVENS!
+
+CORRECTE MEDISCHE NEDERLANDSE TERMINOLOGIE:
+- Gebruik ALTIJD correcte medische Nederlandse termen
+- GEEN samengestelde woorden
+- Correcte anatomische benamingen voor TEE structuren
+
+Uw taak: Analyseer het dictaat en vul het TEE-template in met ALLEEN de WERKELIJK GENOEMDE BEVINDINGEN.
+
+TEMPLATE STRUCTUUR REGELS:
+- BEHOUD ALLE TEMPLATE LIJNEN - laat geen enkele regel weg
+- Voor elke lijn: geef een medische beschrijving gebaseerd op wat genoemd is
+- Voor specifieke parameters (cijfers): alleen invullen als expliciet genoemd
+- Voor algemene beschrijvingen: gebruik logische medische termen
+- GEBRUIK ALTIJD CORRECTE MEDISCHE NEDERLANDSE TERMINOLOGIE
+
+INVUL REGELS:
+1. EXPLICIET GENOEMDE AFWIJKINGEN: Vul exact in zoals gedicteerd MAAR met correcte terminologie
+2. NIET GENOEMDE STRUCTUREN: Gebruik "normaal" of "geen afwijkingen"
+3. SPECIFIEKE CIJFERS: Alleen als letterlijk genoemd
+4. ALGEMENE FUNCTIE: Afleiden uit context
+5. TERMINOLOGIE: Altijd correcte medische Nederlandse termen gebruiken
+
+VOLLEDIGE TEE TEMPLATE STRUCTUUR:
+
+TEE op {today}:
+- Linker ventrikel: [normaal/eutroof als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Rechter ventrikel: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Linker atrium: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Rechter atrium: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Linker hartoor: [geen trombus als niet anders vermeld, specifieke bevindingen als genoemd]
+- Rechter hartoor: [geen trombus als niet anders vermeld, specifieke bevindingen als genoemd]
+- Interatriaal septum: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Mitralisklep: [morfologisch normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Aortaklep: [tricuspied, morfologisch normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Pulmonalisklep: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Tricuspidalisklep: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Aorta ascendens: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Vena cava inferior: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+- Pulmonaalvenen: [normaal als niet anders vermeld, specifieke afwijkingen als genoemd]
+
+Conclusie: [Samenvatting van werkelijk genoemde afwijkingen]
+
+Beleid:
+[Alleen invullen als expliciet genoemd in dictaat]
+
+VEILIGHEIDSCHECK: Elk cijfer moet ECHT in het dictaat staan!
+TERMINOLOGIE CHECK: Gebruik ALLEEN correcte medische Nederlandse termen!
+"""
         else:
             # Default template for other types
             template_instruction = f"""
