@@ -21,7 +21,8 @@
     <strong>⚠️ Belangrijk:</strong> Dit systeem is bedoeld als hulpmiddel. Controleer altijd de output en gebruik uw medische expertise voor de finale beoordeling.
   </div>
 
-  <form id="uploadForm" method="post" action="/transcribe" e    <label for="verslag_type">Type verslag:</label>
+  <form id="uploadForm" method="post" action="/transcribe" enctype="multipart/form-data">
+    <label for="verslag_type">Type verslag:</label>
     <select id="verslag_type" name="verslag_type" required>
       <option value="TTE">🫀 TTE - Transthoracale echocardiografie</option>
       <option value="TEE">🔍 TEE - Transesofageale echocardiografie</option>
@@ -29,7 +30,7 @@
       <option value="Raadpleging">📋 Raadpleging - Volledige consultatieverslagen</option>
       <option value="Consult">👨‍⚕️ Consult - Volledige consultatieverslagen</option>
       <option value="Vrij dictaat">📝 Vrij dictaat - Professioneel verslag zonder template</option>
-    </select>:</label>
+    </select>
     <input type="file" name="audio_file" accept="audio/*" />
     
     <div style="margin: 10px 0;">
