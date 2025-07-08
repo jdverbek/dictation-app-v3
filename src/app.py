@@ -188,7 +188,6 @@ def transcribe():
                     transcript = client.audio.transcriptions.create(
                         model="whisper-1",
                         file=(filename, file_content, content_type),
-                        prompt=prompt,
                         temperature=0.0
                     )
                     corrected_transcript = transcript.text
