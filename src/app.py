@@ -173,6 +173,17 @@ def transcribe():
                         temperature=0.0
                     )
                     corrected_transcript = transcript.text
+                    
+                    # Debug: Check if transcription is empty or too short
+                    if not corrected_transcript or len(corrected_transcript.strip()) < 10:
+                        return render_template('index.html', 
+                                             error=f"⚠️ Transcriptie probleem: Audio werd niet correct getranscribeerd. Resultaat: '{corrected_transcript}'. Probeer opnieuw met een duidelijkere opname of schakel hallucinatiedetectie uit.",
+                                             verslag_type=verslag_type)
+                    
+                    # Debug: Show transcription length for troubleshooting
+                    print(f"DEBUG: Transcription length: {len(corrected_transcript)} characters")
+                    print(f"DEBUG: Transcription preview: {corrected_transcript[:200]}...")
+                    
                 except Exception as e:
                     return render_template('index.html', error=f"Transcriptie fout: {str(e)}")
             else:
@@ -422,12 +433,22 @@ ANTI-HALLUCINATIE: Bij twijfel altijd (...) gebruiken!
 """
 
         # Generate structured report
+        print(f"DEBUG: About to call GPT with transcript length: {len(corrected_transcript)}")
+        print(f"DEBUG: Template instruction length: {len(template_instruction)}")
+        
         structured = call_gpt([
             {"role": "system", "content": template_instruction},
-            {"role": "user", "content": corrected_transcript}
+            {"role": "user", "content": f"Transcriptie van het dictaat:\n\n{corrected_transcript}"}
         ])
         
-        # Clean the output to ensure only the template format is returned
+        print(f"DEBUG: GPT response length: {len(structured)}")
+        print(f"DEBUG: GPT response preview: {structured[:200]}...")
+        
+        # Check if GPT is giving a generic "can't transcribe" response
+        if "kan de volledige dictatie niet transcriberen" in structured.lower() or "specifieke inhoud" in structured.lower():
+            return render_template('index.html', 
+                                 error=f"🚨 GPT Probleem: Het systeem kon het dictaat niet verwerken. \n\nOriginele transcriptie ({len(corrected_transcript)} karakters):\n{corrected_transcript}\n\nProbeer opnieuw of schakel hallucinatiedetectie uit.",
+                                 verslag_type=verslag_type)an the output to ensure only the template format is returned
         if "Verslag:" in structured:
             structured = structured.split("Verslag:")[-1].strip()
         
