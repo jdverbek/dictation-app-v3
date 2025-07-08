@@ -369,7 +369,7 @@ Dimensies: LVOT [alleen als genoemd] mm, aorta sinus [alleen als genoemd] mm, si
 VEILIGHEIDSCHECK: Elk cijfer moet ECHT in het dictaat staan!
 TERMINOLOGIE CHECK: Gebruik ALLEEN correcte medische Nederlandse termen!
 """
-        else:
+        elif verslag_type in ['Spoedconsult', 'Raadpleging', 'Consult']:
             # Template for spoedconsult, raadpleging, consult with user's exact template structure
             template_instruction = f"""
 BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat de informatie:
@@ -483,6 +483,19 @@ Als de dictatie bevat: "Patiënt komt voor... eh nee wacht, eigenlijk voor contr
 Dan schrijf je: "Patiënt komt voor controle na myocardinfarct"
 
 Maak een professioneel, samenhangend medisch verslag van de volgende dictatie:
+"""
+        else:
+            # Default fallback for unknown report types
+            template_instruction = f"""
+U krijgt een medische dictatie in het Nederlands. Maak hiervan een professioneel medisch verslag.
+
+BELANGRIJKE REGELS:
+1. VERZIN GEEN MEDISCHE GEGEVENS
+2. Gebruik alleen informatie die expliciet genoemd is
+3. Gebruik correcte medische Nederlandse terminologie
+4. Maak een logisch gestructureerd verslag
+
+Maak een professioneel medisch verslag van de volgende dictatie:
 """
 
         # Generate structured report
