@@ -21,17 +21,15 @@
     <strong>⚠️ Belangrijk:</strong> Dit systeem is bedoeld als hulpmiddel. Controleer altijd de output en gebruik uw medische expertise voor de finale beoordeling.
   </div>
 
-  <form id="uploadForm" method="post" action="/transcribe" enctype="multipart/form-data">
-    <label for="verslag_type">Type verslag:</label>
-    <select name="verslag_type" id="verslag_type">
-      <option value="TTE">🫀 TTE (alleen echocardiografie)</option>
-      <option value="TEE">🫀 TEE (alleen echocardiografie)</option>
-      <option value="spoedconsult">🚨 Spoedconsult (volledige consultatie)</option>
-      <option value="raadpleging">📋 Raadpleging (volledige consultatie)</option>
-      <option value="consult">👨‍⚕️ Consult (volledige consultatie)</option>
-    </select>
-
-    <label>Upload audio:</label>
+  <form id="uploadForm" method="post" action="/transcribe" e    <label for="verslag_type">Type verslag:</label>
+    <select id="verslag_type" name="verslag_type" required>
+      <option value="TTE">🫀 TTE - Transthoracale echocardiografie</option>
+      <option value="TEE">🔍 TEE - Transesofageale echocardiografie</option>
+      <option value="Spoedconsult">🚨 Spoedconsult - Urgente cardiologische evaluatie</option>
+      <option value="Raadpleging">📋 Raadpleging - Volledige consultatieverslagen</option>
+      <option value="Consult">👨‍⚕️ Consult - Volledige consultatieverslagen</option>
+      <option value="Vrij dictaat">📝 Vrij dictaat - Professioneel verslag zonder template</option>
+    </select>:</label>
     <input type="file" name="audio_file" accept="audio/*" />
     
     <div style="margin: 10px 0;">
@@ -60,7 +58,12 @@
 
   <h2>Verslag {% if structured %}✅ Quality Control{% endif %}</h2>
   <textarea id="verslagText" readonly>{{ structured or transcript }}</textarea>
-  <button class="copy-button" onclick="copyToClipboard('verslagText')">📋 Kopieer verslag</button>
+  <div style="display: flex; gap: 10px; margin-top: 10px;">
+    <button class="copy-button" onclick="copyToClipboard('verslagText')">📋 Kopieer verslag</button>
+    {% if structured %}
+    <button class="copy-button" onclick="verbeterVerslag()" style="background-color: #28a745;">✨ Verbeter</button>
+    {% endif %}
+  </div>
 
   {% if advies %}
   <h2>📘 Advies volgens ESC/AHA</h2>
@@ -165,6 +168,50 @@
       setTimeout(() => {
         button.textContent = originalText;
       }, 2000);
+    }
+
+    // Verbeter verslag function
+    function verbeterVerslag() {
+      const verslagText = document.getElementById('verslagText').value;
+      const verslagType = '{{ verslag_type }}';
+      
+      if (!verslagText) {
+        alert('Geen verslag om te verbeteren');
+        return;
+      }
+      
+      // Show loading state
+      const btn = event.target;
+      const originalText = btn.textContent;
+      btn.textContent = '⏳ Verbeteren...';
+      btn.disabled = true;
+      
+      // Send request to improve the report
+      fetch('/verbeter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          verslag: verslagText,
+          verslag_type: verslagType
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('verslagText').value = data.verbeterd_verslag;
+        } else {
+          alert('Fout bij verbeteren: ' + data.error);
+        }
+      })
+      .catch(error => {
+        alert('Fout bij verbeteren: ' + error);
+      })
+      .finally(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      });
     }
 
     // Update recording form when verslag type changes

@@ -459,6 +459,31 @@ Verder: aandacht dient te gaan naar optimale cardiovasculaire preventie met:
 VEILIGHEIDSCHECK: Elk gegeven moet ECHT in het dictaat staan!
 ANTI-HALLUCINATIE: Bij twijfel altijd (...) gebruiken!
 """
+        elif verslag_type == 'Vrij dictaat':
+            template_instruction = f"""
+U krijgt een medische dictatie in het Nederlands. Uw taak is om hiervan een professioneel, coherent medisch verslag te maken ZONDER gebruik van een vaste template.
+
+BELANGRIJKE REGELS:
+1. GEEN TEMPLATE GEBRUIKEN - maak een vrij, professioneel verslag
+2. INCORPOREER ALLE INFORMATIE uit de dictatie
+3. CORRIGEER ZELFCORRECTIES - als de spreker zichzelf later corrigeert, gebruik de laatste/correcte versie
+4. HERSCHRIJF VOOR COHERENTIE - maak een logische, vloeiende tekst
+5. BEHOUD MEDISCHE PRECISIE - alle medische termen en waarden exact overnemen
+6. PROFESSIONELE STIJL - geschikt voor medisch dossier
+
+STRUCTUUR RICHTLIJNEN:
+- Begin met context (datum, type onderzoek, patiënt info indien genoemd)
+- Organiseer informatie logisch (anamnese → onderzoek → bevindingen → conclusie)
+- Gebruik professionele medische taal
+- Maak duidelijke paragrafen voor verschillende onderwerpen
+- Eindig met conclusie en/of aanbevelingen indien van toepassing
+
+VOORBEELD AANPAK:
+Als de dictatie bevat: "Patiënt komt voor... eh nee wacht, eigenlijk voor controle na... ja dat klopt, controle na myocardinfarct"
+Dan schrijf je: "Patiënt komt voor controle na myocardinfarct"
+
+Maak een professioneel, samenhangend medisch verslag van de volgende dictatie:
+"""
 
         # Generate structured report
         print(f"DEBUG: About to call GPT with transcript length: {len(corrected_transcript)}")
@@ -538,6 +563,58 @@ ANTI-HALLUCINATIE: Bij twijfel altijd (...) gebruiken!
 
     except Exception as e:
         return render_template('index.html', error=f"Er is een fout opgetreden: {str(e)}")
+
+@app.route('/verbeter', methods=['POST'])
+def verbeter():
+    """Improve and clean up a medical report by removing unfilled items professionally"""
+    try:
+        data = request.get_json()
+        verslag = data.get('verslag', '')
+        verslag_type = data.get('verslag_type', '')
+        
+        if not verslag:
+            return jsonify({'success': False, 'error': 'Geen verslag ontvangen'})
+        
+        # Create improvement instruction
+        improvement_instruction = """
+U krijgt een medisch verslag dat mogelijk incomplete secties bevat (met (...) of lege velden). 
+Uw taak is om dit verslag professioneel op te schonen door:
+
+VERBETERING REGELS:
+1. VERWIJDER incomplete secties die alleen (...) bevatten
+2. BEHOUD alle secties met echte medische informatie
+3. HERFORMULEER zinnen om lege plekken elegant weg te werken
+4. BEHOUD de professionele medische structuur
+5. ZORG voor vloeiende overgangen tussen secties
+6. GEEN nieuwe medische informatie toevoegen
+
+VOORBEELDEN VAN VERBETERING:
+
+VOOR: "Mitralisklep: morfologisch (...). insufficiëntie: (...), stenose: geen."
+NA: "Mitralisklep: geen significante stenose."
+
+VOOR: "- Hb: (...) g/dL\n- Creatinine: (...) mg/dL"  
+NA: [Hele biochemie sectie weglaten als alles (...) is]
+
+VOOR: "Cor: regelmatig, geen souffle.\nLongen: (...)\nPerifeer: geen oedemen."
+NA: "Cor: regelmatig, geen souffle. Perifeer: geen oedemen."
+
+Het resultaat moet een professioneel, leesbaar medisch verslag zijn zonder incomplete secties.
+
+Verbeter het volgende verslag:
+"""
+        
+        # Call GPT to improve the report
+        verbeterd = call_gpt([
+            {"role": "system", "content": improvement_instruction},
+            {"role": "user", "content": verslag}
+        ])
+        
+        return jsonify({'success': True, 'verbeterd_verslag': verbeterd})
+        
+    except Exception as e:
+        print(f"Error in verbeter: {e}")
+        return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
