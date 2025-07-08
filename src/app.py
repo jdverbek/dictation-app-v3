@@ -199,6 +199,15 @@ def transcribe():
                                              error=f"⚠️ Transcriptie probleem: Audio werd niet correct getranscribeerd.\n\nBestand info:\n- Grootte: {len(file_content)} bytes\n- Type: {content_type}\n- Resultaat: '{corrected_transcript}'\n\nProbeer opnieuw met een duidelijkere opname of schakel hallucinatiedetectie uit.",
                                              verslag_type=verslag_type)
                     
+                    # Check for Whisper hallucination (repetitive prompt text)
+                    if "transcribe" in corrected_transcript.lower() or "dictatie" in corrected_transcript.lower():
+                        # Count how many times the prompt appears
+                        prompt_count = corrected_transcript.lower().count("transcribe") + corrected_transcript.lower().count("dictatie")
+                        if prompt_count > 5:  # If prompt appears more than 5 times, it's likely hallucination
+                            return render_template('index.html', 
+                                                 error=f"🚨 Whisper Hallucinatie Gedetecteerd!\n\nHet audio bestand is te stil of onduidelijk. Whisper herhaalt de instructie in plaats van te transcriberen:\n\n'{corrected_transcript[:200]}...'\n\nOplossingen:\n- Spreek dichterbij de microfoon\n- Verhoog het volume\n- Verminder achtergrondgeluid\n- Spreek langzamer en duidelijker\n\nProbeer opnieuw met een betere opname.",
+                                                 verslag_type=verslag_type)
+                    
                     # Debug: Show transcription length for troubleshooting
                     print(f"DEBUG: Transcription length: {len(corrected_transcript)} characters")
                     print(f"DEBUG: Transcription preview: {corrected_transcript[:200]}...")
