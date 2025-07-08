@@ -486,7 +486,13 @@ ANTI-HALLUCINATIE: Bij twijfel altijd (...) gebruiken!
         lines = structured.split('\n')
         template_start = -1
         for i, line in enumerate(lines):
-            if line.strip().startswith('TTE op') or line.strip().startswith('TEE op') or line.strip().startswith('Spoedconsult'):
+            line_stripped = line.strip()
+            if (line_stripped.startswith('TTE op') or 
+                line_stripped.startswith('TEE op') or 
+                line_stripped.startswith('Spoedconsult') or
+                line_stripped.startswith('Reden van komst:') or
+                line_stripped.startswith('Voorgeschiedenis:') or
+                'Onderzoeksdatum:' in line_stripped):
                 template_start = i
                 break
         
