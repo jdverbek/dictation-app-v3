@@ -485,8 +485,26 @@ ANTI-HALLUCINATIE: Bij twijfel altijd (...) gebruiken!
         if template_start >= 0:
             structured = '\n'.join(lines[template_start:])
 
-        # Perform quality control review
-        structured = quality_control_review(structured, corrected_transcript)
+        # Perform quality control review (only if we have substantial content)
+        if len(corrected_transcript.strip()) > 50:  # Only do QC if we have substantial content
+            try:
+                print(f"DEBUG: Performing quality control review")
+                reviewed = quality_control_review(structured, corrected_transcript)
+                if reviewed and len(reviewed.strip()) > 50 and "geen specifieke" not in reviewed.lower():
+                    structured = reviewed
+                    print(f"DEBUG: Quality control completed successfully")
+                else:
+                    print(f"DEBUG: Quality control failed or returned generic response, using original")
+            except Exception as e:
+                print(f"DEBUG: Quality control error: {str(e)}, using original structured report")
+        else:
+            print(f"DEBUG: Skipping quality control due to minimal transcription content ({len(corrected_transcript)} chars)")
+            
+        # Additional check: if structured report looks like a generic "can't process" message
+        if len(structured.strip()) < 100 or "geen specifieke" in structured.lower() or "niet verstrekt" in structured.lower():
+            return render_template('index.html', 
+                                 error=f"⚠️ Verwerking probleem: Het systeem kon geen bruikbaar verslag genereren.\n\nOriginele transcriptie ({len(corrected_transcript)} karakters):\n{corrected_transcript}\n\nMogelijke oorzaken:\n- Audio kwaliteit te laag\n- Dictaat te kort of onduidelijk\n- Technische problemen\n\nProbeer opnieuw met een duidelijkere opname of schakel hallucinatiedetectie uit.",
+                                 verslag_type=verslag_type)
 
         # Check for hallucination (only if not disabled)
         if not disable_hallucination:
