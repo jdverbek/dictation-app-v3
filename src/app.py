@@ -151,6 +151,7 @@ def transcribe():
     try:
         # Get form data
         verslag_type = request.form.get('verslag_type', 'TTE')
+        disable_hallucination = request.form.get('disable_hallucination_detection') == 'true'
         
         # Handle file upload
         if 'audio_file' in request.files:
@@ -363,15 +364,16 @@ Gebruik professionele medische terminologie en structuur.
         # Perform quality control review
         structured = quality_control_review(structured, corrected_transcript)
 
-        # Check for hallucination
-        is_hallucination, hallucination_msg = detect_hallucination(structured, corrected_transcript)
-        
-        if is_hallucination:
-            # If hallucination detected, show warning and original transcript
-            error_msg = f"🚨 Mogelijk hallucinatie gedetecteerd!\n\n{hallucination_msg}\n\nHet systeem heeft mogelijk medische gegevens verzonnen die niet in het originele dictaat stonden. Controleer het originele dictaat hieronder en probeer opnieuw met een duidelijker opname.\n\nOrigineel dictaat:\n{corrected_transcript}"
-            return render_template('index.html', 
-                                 error=error_msg,
-                                 verslag_type=verslag_type)
+        # Check for hallucination (only if not disabled)
+        if not disable_hallucination:
+            is_hallucination, hallucination_msg = detect_hallucination(structured, corrected_transcript)
+            
+            if is_hallucination:
+                # If hallucination detected, show warning and original transcript
+                error_msg = f"🚨 Mogelijk hallucinatie gedetecteerd!\n\n{hallucination_msg}\n\nHet systeem heeft mogelijk medische gegevens verzonnen die niet in het originele dictaat stonden. Controleer het originele dictaat hieronder en probeer opnieuw met een duidelijker opname.\n\nOrigineel dictaat:\n{corrected_transcript}"
+                return render_template('index.html', 
+                                     error=error_msg,
+                                     verslag_type=verslag_type)
 
         return render_template('index.html', 
                              transcript=corrected_transcript,

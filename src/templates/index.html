@@ -33,6 +33,14 @@
 
     <label>Upload audio:</label>
     <input type="file" name="audio_file" accept="audio/*" />
+    
+    <div style="margin: 10px 0;">
+      <label>
+        <input type="checkbox" name="disable_hallucination_detection" value="true" style="margin-right: 8px;">
+        🔧 Schakel hallucinatiedetectie uit
+      </label>
+    </div>
+    
     <button type="submit">📤 Upload en verwerk</button>
   </form>
 
@@ -92,6 +100,14 @@
           const preview = document.getElementById('preview');
           preview.src = url;
           preview.style.display = 'block';
+
+          // Automatically download the recorded audio
+          const downloadLink = document.createElement('a');
+          downloadLink.href = url;
+          downloadLink.download = `opname_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.wav`;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
 
           // Create file for upload
           const file = new File([blob], 'recording.wav', { type: 'audio/wav' });
