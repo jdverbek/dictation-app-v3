@@ -2,7 +2,7 @@ import io
 import os
 import datetime
 import openai
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, jsonify
 from openai import OpenAI
 
 app = Flask(__name__)
