@@ -468,7 +468,9 @@ ANTI-HALLUCINATIE: Bij twijfel altijd (...) gebruiken!
         if "kan de volledige dictatie niet transcriberen" in structured.lower() or "specifieke inhoud" in structured.lower():
             return render_template('index.html', 
                                  error=f"🚨 GPT Probleem: Het systeem kon het dictaat niet verwerken. \n\nOriginele transcriptie ({len(corrected_transcript)} karakters):\n{corrected_transcript}\n\nProbeer opnieuw of schakel hallucinatiedetectie uit.",
-                                 verslag_type=verslag_type)an the output to ensure only the template format is returned
+                                 verslag_type=verslag_type)
+        
+        # Clean the output to ensure only the template format is returned
         if "Verslag:" in structured:
             structured = structured.split("Verslag:")[-1].strip()
         
