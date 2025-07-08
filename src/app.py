@@ -331,7 +331,7 @@ VEILIGHEIDSCHECK: Elk cijfer moet ECHT in het dictaat staan!
 TERMINOLOGIE CHECK: Gebruik ALLEEN correcte medische Nederlandse termen!
 """
         else:
-            # Template for spoedconsult, raadpleging, consult with strict 'niet vermeld' approach
+            # Template for spoedconsult, raadpleging, consult with user's exact template structure
             template_instruction = f"""
 BELANGRIJK: U krijgt een intuïtief dictaat van een cardioloog. Dit betekent dat de informatie:
 - Niet in de juiste volgorde staat
@@ -344,69 +344,81 @@ KRITIEKE ANTI-HALLUCINATIE REGEL: VERZIN ABSOLUUT GEEN MEDISCHE GEGEVENS!
 STRIKT STRAMIEN REGELS:
 - BEHOUD ALLE TEMPLATE LIJNEN - laat geen enkele regel weg
 - Voor elke lijn: vul ALLEEN in wat EXPLICIET genoemd is
-- Voor niet-genoemde informatie: gebruik "niet vermeld"
+- Voor niet-genoemde informatie: laat de (...) staan of gebruik standaard waarden waar aangegeven
 - GEEN gissingen, GEEN aannames, GEEN logische afleidingen
-- VEILIGHEID EERST: beter "niet vermeld" dan verzonnen data
+- VEILIGHEID EERST: beter (...) dan verzonnen data
 
 CORRECTE MEDISCHE NEDERLANDSE TERMINOLOGIE:
 - Gebruik ALTIJD correcte medische Nederlandse termen
 - GEEN samengestelde woorden
 
-VOLLEDIGE TEMPLATE STRUCTUUR:
+VOLLEDIGE TEMPLATE STRUCTUUR (EXACT VOLGEN):
 
-Reden van komst: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Voorgeschiedenis: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Persoonlijke antecedenten: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
+Reden van komst: [alleen invullen als expliciet genoemd, anders leeglaten]
+Voorgeschiedenis: [alleen invullen als expliciet genoemd, anders leeglaten]
+Persoonlijke antecedenten: [alleen invullen als expliciet genoemd, anders leeglaten]
 Familiaal
-- prematuur coronair lijden: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-- plotse dood: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Beroep: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
+- prematuur coronair lijden: [alleen invullen als expliciet genoemd, anders leeglaten]
+- plotse dood: [alleen invullen als expliciet genoemd, anders leeglaten]
+Beroep: [alleen invullen als expliciet genoemd, anders leeglaten]
 Usus:
-- nicotine: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-- ethyl: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-- druggebruik: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
+- nicotine: [alleen invullen als expliciet genoemd, anders leeglaten]
+- ethyl: [alleen invullen als expliciet genoemd, anders leeglaten]
+- druggebruik: [alleen invullen als expliciet genoemd, anders leeglaten]
 Anamnese
-Retrosternale last: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Dyspneu: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Palpitaties: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Zwelling onderste ledematen: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Draaierigheid/syncope: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
+Retrosternale last: [alleen invullen als expliciet genoemd, anders leeglaten]
+Dyspneu: [alleen invullen als expliciet genoemd, anders leeglaten]
+Palpitaties: [alleen invullen als expliciet genoemd, anders leeglaten]
+Zwelling onderste ledematen: [alleen invullen als expliciet genoemd, anders leeglaten]
+Draaierigheid/syncope: [alleen invullen als expliciet genoemd, anders leeglaten]
 Lichamelijk onderzoek
-Cor: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Longen: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Perifeer: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Jugulairen: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
+Cor: [als niet genoemd: "regelmatig, geen souffle."]
+Longen: [als niet genoemd: "zuiver."]
+Perifeer: [als niet genoemd: "geen oedemen."]
+Jugulairen: [als niet genoemd: "niet gestuwd."]
 Aanvullend onderzoek
 ECG op raadpleging ({today}):
-- ritme: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-- PR: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-- QRS: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-- repolarisatie: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-- QTc: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
+- ritme: [kies uit: sinusaal/VKF/voorkamerflutter/atriale tachycardie of (...) als niet genoemd]
+- PR: [kies uit: normaal/verlengd/verkort + (...) ms of (...) als niet genoemd]
+- QRS: [kies uit: normale/linker/rechter as, smal/verbreed met LBTB/verbreed met RBTB/verbreed met aspecifiek IVCD of (...) als niet genoemd]
+- repolarisatie: [kies uit: normaal/gestoord met... of (...) als niet genoemd]
+- QTc: [kies uit: normaal/verlengd + (...) ms of (...) als niet genoemd]
 Fietsproef op raadpleging ({today}):
-[alleen invullen als expliciet genoemd, anders "niet vermeld"]
+[Als genoemd: "Patiënt fietst tot (...) W waarbij de hartslag oploopt van (...) tot (...)/min ((...)% van de voor leeftijd voorspelde waarde). De bloeddruk stijgt tot (...)/(...)mmHg. Klachten: (ja/neen). ECG tijdens inspanning toont (wel/geen) argumenten voor ischemie en (wel/geen) aritmie." - vul alleen bekende waarden in]
+[Als niet genoemd: leeglaten]
 TTE op raadpleging ({today}):
-Linker ventrikel: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Regionaal: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Rechter ventrikel: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Diastole: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Atria: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Aortadimensies: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Mitralisklep: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Aortaklep: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Pulmonalisklep: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Tricuspidalisklep: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-Pericard: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
+Linker ventrikel: [als genoemd: "(...)troof met EDD (...) mm, IVS (...) mm, PW (...) mm. Globale functie: (goed/licht gedaald/matig gedaald/ernstig gedaald) met LVEF (...)% (geschat/monoplane/biplane)." - vul alleen bekende waarden in]
+Regionaal: [als genoemd: kies uit "geen kinetiekstoornissen/zone van hypokinesie/zone van akinesie"]
+Rechter ventrikel: [als genoemd: "(...)troof, globale functie: (...) met TAPSE (...) mm." - vul alleen bekende waarden in]
+Diastole: [als genoemd: kies uit "normaal/vertraagde relaxatie/dysfunctie graad 2/dysfunctie graad 3" + "met E (...) cm/s, A (...) cm/s, E DT (...) ms, E' septaal (...) cm/s, E/E' (...). L-golf: (ja/neen)." - vul alleen bekende waarden in]
+Atria: [als genoemd: "LA (normaal/licht gedilateerd/sterk gedilateerd) (...) mm." - vul alleen bekende waarden in]
+Aortadimensies: [als genoemd: "(normaal/gedilateerd) met sinus (...) mm, sinotubulair (...) mm, ascendens (...) mm." - vul alleen bekende waarden in]
+Mitralisklep: [als genoemd: "morfologisch (normaal/sclerotisch/verdikt/prolaps/restrictief). insufficiëntie: (...), stenose: geen." - vul alleen bekende waarden in]
+Aortaklep: [als genoemd: "(tricuspied/bicuspied), morfologisch (normaal/sclerotisch/mild verkalkt/matig verkalkt/ernstig verkalkt). Functioneel: insufficiëntie: geen, stenose: geen." - vul alleen bekende waarden in]
+Pulmonalisklep: [als genoemd: "insufficiëntie: spoor, stenose: geen." of vul bekende waarden in]
+Tricuspidalisklep: [als genoemd: "insufficiëntie: (...), geschatte RVSP: (...mmHg/niet opmeetbaar) + CVD (...) mmHg gezien vena cava inferior: (...) mm, variabiliteit: (...)." - vul alleen bekende waarden in]
+Pericard: [als genoemd: vul in, anders "(...)."]
 Recente biochemie op datum ({today}):
-- Hb: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-- Creatinine en eGFR: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-- LDL: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
-- HbA1c: [alleen invullen als expliciet genoemd, anders "niet vermeld"]
+- Hb: [als genoemd: "(...) g/dL", anders "(...) g/dL"]
+- Creatinine: [als genoemd: "(...) mg/dL en eGFR (...) mL/min.", anders "(...) mg/dL en eGFR (...) mL/min."]
+- LDL: [als genoemd: "(...) mg/dL", anders "(...) mg/dL"]
+- HbA1c: [als genoemd: "(...)%", anders "(...)%"]
 Besluit
-[alleen invullen als expliciet genoemd, anders "niet vermeld"]
+[Als genoemd: vul in, anders gebruik standaard structuur:]
+Uw (...)-jarige patiënt werd gezien op de raadpleging cardiologie op {today}. Wij weerhouden volgende problematiek:
+1. [Probleem 1 + beschrijving + aanpak als genoemd]
+2. [Probleem 2 + beschrijving + aanpak als genoemd]
+...
+Verder: aandacht dient te gaan naar optimale cardiovasculaire preventie met:
+- Vermijden van tabak.
+- Tensiecontrole( met streefdoel <130/80 mmHg/. Geen gekende hypertensie). Graag uw verdere opvolging.
+- LDL-cholesterol < (100/70/55) mg/dL. Actuele waarde (...) mg/dL (aldus goed onder controle/waarvoor opstart /waarvoor intensifiëring van de statinetherapie naar ).
+- (Adequate glycemiecontrole met streefdoel HbA1c <6.5%/Geen argumenten voor diabetes mellitus type II).
+- Lichaamsgewicht: BMI 20-25 kg/m² na te streven.
+- Lifestyle-advies: mediterraan dieet arm aan verzadigde of dierlijke vetten en focus op volle graan producten, groente, fruit en vis. Zoveel lichaamsbeweging als mogelijk met liefst dagelijks beweging en 3-5x/week ged. 30 min een matige fysieke inspanning.
 
 VEILIGHEIDSCHECK: Elk gegeven moet ECHT in het dictaat staan!
-ANTI-HALLUCINATIE: Bij twijfel altijd "niet vermeld" gebruiken!
+ANTI-HALLUCINATIE: Bij twijfel altijd (...) gebruiken!
 """
 
         # Generate structured report
