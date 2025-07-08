@@ -166,9 +166,28 @@ def transcribe():
                 try:
                     # Convert FileStorage to the format expected by OpenAI
                     audio_file.seek(0)  # Reset file pointer to beginning
+                    
+                    # Debug: Check file info
+                    file_content = audio_file.read()
+                    audio_file.seek(0)  # Reset again
+                    
+                    print(f"DEBUG: File size: {len(file_content)} bytes")
+                    print(f"DEBUG: File name: {audio_file.filename}")
+                    print(f"DEBUG: Content type: {audio_file.content_type}")
+                    print(f"DEBUG: First 20 bytes: {file_content[:20]}")
+                    
+                    # Check if file is actually WebM (common issue with browser recordings)
+                    if file_content.startswith(b'\x1a\x45\xdf\xa3'):
+                        print("DEBUG: File is WebM format, adjusting content type")
+                        content_type = 'audio/webm'
+                        filename = audio_file.filename.replace('.wav', '.webm')
+                    else:
+                        content_type = audio_file.content_type
+                        filename = audio_file.filename
+                    
                     transcript = client.audio.transcriptions.create(
                         model="whisper-1",
-                        file=(audio_file.filename, audio_file.read(), audio_file.content_type),
+                        file=(filename, file_content, content_type),
                         prompt=prompt,
                         temperature=0.0
                     )
@@ -177,7 +196,7 @@ def transcribe():
                     # Debug: Check if transcription is empty or too short
                     if not corrected_transcript or len(corrected_transcript.strip()) < 10:
                         return render_template('index.html', 
-                                             error=f"⚠️ Transcriptie probleem: Audio werd niet correct getranscribeerd. Resultaat: '{corrected_transcript}'. Probeer opnieuw met een duidelijkere opname of schakel hallucinatiedetectie uit.",
+                                             error=f"⚠️ Transcriptie probleem: Audio werd niet correct getranscribeerd.\n\nBestand info:\n- Grootte: {len(file_content)} bytes\n- Type: {content_type}\n- Resultaat: '{corrected_transcript}'\n\nProbeer opnieuw met een duidelijkere opname of schakel hallucinatiedetectie uit.",
                                              verslag_type=verslag_type)
                     
                     # Debug: Show transcription length for troubleshooting
@@ -185,7 +204,8 @@ def transcribe():
                     print(f"DEBUG: Transcription preview: {corrected_transcript[:200]}...")
                     
                 except Exception as e:
-                    return render_template('index.html', error=f"Transcriptie fout: {str(e)}")
+                    print(f"DEBUG: Transcription error: {str(e)}")
+                    return render_template('index.html', error=f"Transcriptie fout: {str(e)}\n\nBestand info:\n- Naam: {audio_file.filename}\n- Type: {audio_file.content_type}\n- Grootte: {len(audio_file.read()) if audio_file else 'onbekend'} bytes")
             else:
                 return render_template('index.html', error="⚠️ Geen bestand geselecteerd.")
         else:
