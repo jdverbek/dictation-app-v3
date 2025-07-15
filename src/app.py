@@ -14,7 +14,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
 # Authentication configuration
-AUTH_PLATFORM_URL = 'https://dictation-app-auth.onrender.com'  # Update this with your auth platform URL
+AUTH_PLATFORM_URL = 'https://medical-auth-platform.onrender.com'  # Updated to separate service URL
 
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
