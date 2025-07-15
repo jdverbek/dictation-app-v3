@@ -4,7 +4,7 @@ import hashlib
 import secrets
 import jwt
 from datetime import datetime, timezone, timedelta
-from flask import Flask, request, jsonify, session, render_template_string, redirect
+from flask import Flask, request, jsonify, session, render_template_string
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -333,6 +333,12 @@ HTML_TEMPLATE = '''
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .countdown {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -400,15 +406,18 @@ HTML_TEMPLATE = '''
         <!-- Redirect Section -->
         <div id="redirect-section" class="hidden">
             <div class="redirect-message">
-                <h3>Login Successful!</h3>
+                <h3>✅ Login Successful!</h3>
                 <p>Redirecting you to the Medical Transcription App...</p>
                 <div class="spinner"></div>
-                <p><small>If you are not redirected automatically, <a href="#" id="manual-redirect">click here</a>.</small></p>
+                <div class="countdown" id="countdown">Redirecting in 3 seconds...</div>
+                <p style="margin-top: 15px;"><small>If you are not redirected automatically, <a href="#" id="manual-redirect">click here</a>.</small></p>
             </div>
         </div>
     </div>
 
     <script>
+        const MAIN_APP_URL = '{{ main_app_url }}';
+        
         function showTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('[id$="-tab"]').forEach(t => t.classList.add('hidden'));
@@ -428,20 +437,43 @@ HTML_TEMPLATE = '''
         }
 
         function redirectToMainApp(token, userData) {
+            console.log('Starting redirect process...');
+            console.log('Token:', token);
+            console.log('User data:', userData);
+            
             // Show redirect message
             document.getElementById('auth-section').classList.add('hidden');
             document.getElementById('redirect-section').classList.remove('hidden');
             
             // Construct redirect URL with authentication data
-            const redirectUrl = `${MAIN_APP_URL}?token=${encodeURIComponent(token)}&user=${encodeURIComponent(userData.username)}&name=${encodeURIComponent(userData.first_name + ' ' + userData.last_name)}`;
+            const params = new URLSearchParams({
+                token: token,
+                user: userData.username,
+                name: userData.first_name + ' ' + userData.last_name,
+                email: userData.email
+            });
+            
+            const redirectUrl = `${MAIN_APP_URL}?${params.toString()}`;
+            console.log('Redirect URL:', redirectUrl);
             
             // Set up manual redirect link
             document.getElementById('manual-redirect').href = redirectUrl;
             
-            // Redirect after 3 seconds
-            setTimeout(() => {
-                window.location.href = redirectUrl;
-            }, 3000);
+            // Countdown timer
+            let countdown = 3;
+            const countdownElement = document.getElementById('countdown');
+            
+            const timer = setInterval(() => {
+                countdown--;
+                countdownElement.textContent = `Redirecting in ${countdown} seconds...`;
+                
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    countdownElement.textContent = 'Redirecting now...';
+                    console.log('Redirecting to:', redirectUrl);
+                    window.location.href = redirectUrl;
+                }
+            }, 1000);
         }
 
         async function login() {
@@ -462,6 +494,7 @@ HTML_TEMPLATE = '''
                 });
                 
                 const data = await response.json();
+                console.log('Login response:', data);
                 
                 if (response.ok) {
                     // Redirect to main app with token
@@ -470,6 +503,7 @@ HTML_TEMPLATE = '''
                     showAlert(data.message, 'error');
                 }
             } catch (error) {
+                console.error('Login error:', error);
                 showAlert('Network error. Please try again.', 'error');
             }
         }
@@ -518,9 +552,6 @@ HTML_TEMPLATE = '''
             e.preventDefault();
             register();
         });
-
-        // Set main app URL for JavaScript
-        const MAIN_APP_URL = '{{ main_app_url }}';
     </script>
 </body>
 </html>
