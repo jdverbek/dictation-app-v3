@@ -2,13 +2,81 @@ import io
 import os
 import datetime
 import openai
-from flask import Flask, request, render_template, redirect, url_for, jsonify
+import jwt
+import secrets
+from functools import wraps
+from flask import Flask, request, render_template, redirect, url_for, jsonify, session
 from openai import OpenAI
 
 app = Flask(__name__)
 
+# Configure session
+app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+
+# Authentication configuration
+AUTH_PLATFORM_URL = 'https://dictation-app-auth.onrender.com'  # Update this with your auth platform URL
+
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+def verify_jwt_token(token):
+    """Verify JWT token and return user data"""
+    try:
+        # Use the same secret key as the auth platform
+        secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
+def login_required(f):
+    """Decorator to require authentication for routes"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Check if user is already in session
+        if 'user_id' in session and 'username' in session:
+            return f(*args, **kwargs)
+        
+        # Check for authentication parameters in URL (from auth platform redirect)
+        token = request.args.get('token')
+        user = request.args.get('user')
+        name = request.args.get('name')
+        email = request.args.get('email')
+        
+        if token:
+            # Verify the JWT token
+            user_data = verify_jwt_token(token)
+            if user_data:
+                # Store user data in session
+                session['user_id'] = user_data['user_id']
+                session['username'] = user_data['username']
+                session['email'] = user_data['email']
+                session['first_name'] = user_data['first_name']
+                session['last_name'] = user_data['last_name']
+                session['full_name'] = f"{user_data['first_name']} {user_data['last_name']}"
+                
+                # Redirect to clean URL without parameters
+                return redirect(url_for(request.endpoint))
+        
+        # If no valid authentication, redirect to auth platform
+        return redirect(AUTH_PLATFORM_URL)
+    
+    return decorated_function
+
+def get_current_user():
+    """Get current user data from session"""
+    if 'user_id' in session:
+        return {
+            'user_id': session['user_id'],
+            'username': session['username'],
+            'email': session['email'],
+            'first_name': session['first_name'],
+            'last_name': session['last_name'],
+            'full_name': session['full_name']
+        }
+    return None
 
 def call_gpt(messages, model="gpt-4o", temperature=0.0):
     """Call GPT with error handling"""
@@ -143,10 +211,13 @@ def detect_hallucination(structured_report, transcript):
     return False, None
 
 @app.route('/')
+@login_required
 def index():
-    return render_template('index.html')
+    user = get_current_user()
+    return render_template('index.html', user=user)
 
 @app.route('/transcribe', methods=['POST'])
+@login_required
 def transcribe():
     try:
         # Get form data
@@ -578,6 +649,7 @@ Maak een professioneel medisch verslag van de volgende dictatie:
         return render_template('index.html', error=f"Er is een fout opgetreden: {str(e)}")
 
 @app.route('/verbeter', methods=['POST'])
+@login_required
 def verbeter():
     """Improve and clean up a medical report by removing unfilled items professionally"""
     try:
@@ -628,6 +700,12 @@ Verbeter het volgende verslag:
     except Exception as e:
         print(f"Error in verbeter: {e}")
         return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/logout')
+def logout():
+    """Logout user and redirect to authentication platform"""
+    session.clear()
+    return redirect(AUTH_PLATFORM_URL)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

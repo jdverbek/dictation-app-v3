@@ -17,6 +17,16 @@
 <body>
   <h1>🩺 Medisch verslag</h1>
   
+  {% if user %}
+  <div style="background: #e8f5e8; border: 1px solid #4caf50; padding: 15px; margin: 10px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <strong>👤 Ingelogd als:</strong> {{ user.full_name }} ({{ user.username }})
+      <br><small>📧 {{ user.email }}</small>
+    </div>
+    <a href="/logout" style="background: #f44336; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 14px;">🚪 Uitloggen</a>
+  </div>
+  {% endif %}
+  
   <div class="warning">
     <strong>⚠️ Belangrijk:</strong> Dit systeem is bedoeld als hulpmiddel. Controleer altijd de output en gebruik uw medische expertise voor de finale beoordeling.
   </div>
