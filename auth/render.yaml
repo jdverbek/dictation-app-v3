@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: medical-auth-platform
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: medical_auth.db
+
