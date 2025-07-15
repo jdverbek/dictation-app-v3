@@ -2,8 +2,9 @@ import os
 import sqlite3
 import hashlib
 import secrets
-from datetime import datetime, timezone
-from flask import Flask, request, jsonify, session, render_template_string
+import jwt
+from datetime import datetime, timezone, timedelta
+from flask import Flask, request, jsonify, session, render_template_string, redirect
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -14,6 +15,9 @@ CORS(app, supports_credentials=True)
 
 # Database configuration
 DATABASE_URL = os.environ.get('DATABASE_URL', 'medical_auth.db')
+
+# Main app URL for redirect
+MAIN_APP_URL = 'https://medical-transcription-app-bkm3.onrender.com'
 
 def init_db():
     """Initialize the database with required tables"""
@@ -78,6 +82,20 @@ def verify_password(password, stored_hash, salt):
     password_hash, _ = hash_password(password, salt)
     return password_hash == stored_hash
 
+def generate_jwt_token(user_data):
+    """Generate JWT token for user"""
+    payload = {
+        'user_id': user_data['id'],
+        'username': user_data['username'],
+        'email': user_data['email'],
+        'first_name': user_data['first_name'],
+        'last_name': user_data['last_name'],
+        'exp': datetime.utcnow() + timedelta(hours=24),  # Token expires in 24 hours
+        'iat': datetime.utcnow()
+    }
+    
+    return jwt.encode(payload, app.secret_key, algorithm='HS256')
+
 def log_audit(user_id, action, details=None, ip_address=None, user_agent=None):
     """Log user actions for compliance"""
     try:
@@ -92,7 +110,7 @@ def log_audit(user_id, action, details=None, ip_address=None, user_agent=None):
     except Exception as e:
         print(f"Audit logging error: {e}")
 
-# HTML Template
+# HTML Template with redirect functionality
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html lang="en">
@@ -106,7 +124,7 @@ HTML_TEMPLATE = '''
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -116,7 +134,7 @@ HTML_TEMPLATE = '''
             justify-content: center;
             padding: 20px;
         }
-        
+
         .container {
             background: white;
             border-radius: 20px;
@@ -124,177 +142,208 @@ HTML_TEMPLATE = '''
             padding: 40px;
             width: 100%;
             max-width: 450px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header {
             text-align: center;
-            margin-bottom: 30px;
         }
-        
+
         .logo {
-            font-size: 2.5em;
+            font-size: 48px;
             margin-bottom: 10px;
         }
-        
-        .title {
-            font-size: 1.8em;
+
+        h1 {
             color: #333;
-            margin-bottom: 5px;
-            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 28px;
         }
-        
+
         .subtitle {
             color: #666;
-            font-size: 1em;
+            margin-bottom: 30px;
+            font-size: 16px;
         }
-        
+
         .tabs {
             display: flex;
             margin-bottom: 30px;
             border-radius: 10px;
             overflow: hidden;
-            border: 2px solid #e0e0e0;
+            background: #f5f5f5;
         }
-        
+
         .tab {
             flex: 1;
             padding: 15px;
-            background: #f8f9fa;
+            background: transparent;
             border: none;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 16px;
             font-weight: 500;
             transition: all 0.3s ease;
-            color: #666;
         }
-        
+
         .tab.active {
             background: #667eea;
             color: white;
         }
-        
+
         .form-group {
             margin-bottom: 20px;
+            text-align: left;
         }
-        
-        .form-group label {
+
+        label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 500;
             color: #333;
+            font-weight: 500;
         }
-        
-        .form-group input {
+
+        input[type="text"], input[type="email"], input[type="password"] {
             width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 1em;
+            padding: 12px 15px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 16px;
             transition: border-color 0.3s ease;
         }
-        
-        .form-group input:focus {
+
+        input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
             outline: none;
             border-color: #667eea;
         }
-        
+
         .checkbox-group {
             display: flex;
             align-items: flex-start;
-            gap: 10px;
             margin-bottom: 20px;
+            text-align: left;
         }
-        
+
         .checkbox-group input[type="checkbox"] {
-            width: auto;
-            margin-top: 3px;
+            margin-right: 10px;
+            margin-top: 2px;
         }
-        
+
         .checkbox-group label {
             margin-bottom: 0;
-            font-size: 0.9em;
+            font-size: 14px;
             line-height: 1.4;
         }
-        
+
         .btn {
             width: 100%;
             padding: 15px;
             background: #667eea;
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: background 0.3s ease;
         }
-        
+
         .btn:hover {
             background: #5a6fd8;
         }
-        
+
+        .logout-btn {
+            background: #dc3545;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
         .alert {
             padding: 15px;
-            border-radius: 10px;
             margin-bottom: 20px;
+            border-radius: 8px;
             font-weight: 500;
         }
-        
+
         .alert-success {
             background: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
-        
+
         .alert-error {
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
-        
+
         .hidden {
             display: none !important;
         }
-        
+
         .dashboard {
             text-align: center;
         }
-        
+
         .welcome-message {
-            font-size: 1.2em;
-            margin-bottom: 20px;
+            font-size: 24px;
             color: #333;
+            margin-bottom: 30px;
+            font-weight: 600;
         }
-        
+
         .user-info {
             background: #f8f9fa;
             padding: 20px;
             border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .user-info h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .user-info p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .redirect-message {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            color: #1565c0;
+            padding: 20px;
+            border-radius: 10px;
             margin-bottom: 20px;
         }
-        
-        .logout-btn {
-            background: #dc3545;
+
+        .redirect-message h3 {
+            margin-bottom: 10px;
         }
-        
-        .logout-btn:hover {
-            background: #c82333;
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="logo">🏥</div>
-            <h1 class="title">Medical Platform</h1>
-            <p class="subtitle">Secure Authentication System</p>
-        </div>
+        <div class="logo">🏥</div>
+        <h1>Medical Platform</h1>
+        <p class="subtitle">Secure Authentication System</p>
         
         <div id="alerts"></div>
         
-        <!-- Authentication Forms -->
+        <!-- Authentication Section -->
         <div id="auth-section">
             <div class="tabs">
                 <button class="tab active" onclick="showTab('login')">Login</button>
@@ -348,15 +397,13 @@ HTML_TEMPLATE = '''
             </div>
         </div>
         
-        <!-- Dashboard -->
-        <div id="dashboard-section" class="hidden">
-            <div class="dashboard">
-                <div class="welcome-message">Welcome to your dashboard!</div>
-                <div class="user-info">
-                    <h3>User Information</h3>
-                    <p id="user-details"></p>
-                </div>
-                <button onclick="logout()" class="btn logout-btn">Logout</button>
+        <!-- Redirect Section -->
+        <div id="redirect-section" class="hidden">
+            <div class="redirect-message">
+                <h3>Login Successful!</h3>
+                <p>Redirecting you to the Medical Transcription App...</p>
+                <div class="spinner"></div>
+                <p><small>If you are not redirected automatically, <a href="#" id="manual-redirect">click here</a>.</small></p>
             </div>
         </div>
     </div>
@@ -380,16 +427,21 @@ HTML_TEMPLATE = '''
             }, 5000);
         }
 
-        function showDashboard(userData) {
+        function redirectToMainApp(token, userData) {
+            // Show redirect message
             document.getElementById('auth-section').classList.add('hidden');
-            document.getElementById('dashboard-section').classList.remove('hidden');
-            document.getElementById('user-details').textContent = 
-                `${userData.first_name} ${userData.last_name} (${userData.username})`;
-        }
-
-        function showAuth() {
-            document.getElementById('auth-section').classList.remove('hidden');
-            document.getElementById('dashboard-section').classList.add('hidden');
+            document.getElementById('redirect-section').classList.remove('hidden');
+            
+            // Construct redirect URL with authentication data
+            const redirectUrl = `${MAIN_APP_URL}?token=${encodeURIComponent(token)}&user=${encodeURIComponent(userData.username)}&name=${encodeURIComponent(userData.first_name + ' ' + userData.last_name)}`;
+            
+            // Set up manual redirect link
+            document.getElementById('manual-redirect').href = redirectUrl;
+            
+            // Redirect after 3 seconds
+            setTimeout(() => {
+                window.location.href = redirectUrl;
+            }, 3000);
         }
 
         async function login() {
@@ -412,10 +464,10 @@ HTML_TEMPLATE = '''
                 const data = await response.json();
                 
                 if (response.ok) {
-                    showAlert('Login successful!', 'success');
-                    showDashboard(data.user);
+                    // Redirect to main app with token
+                    redirectToMainApp(data.token, data.user);
                 } else {
-                    showAlert(data.message || 'Login failed', 'error');
+                    showAlert(data.message, 'error');
                 }
             } catch (error) {
                 showAlert('Network error. Please try again.', 'error');
@@ -439,56 +491,24 @@ HTML_TEMPLATE = '''
                         last_name: formData.get('last_name'),
                         password: formData.get('password'),
                         consent_given: formData.get('consent_given') === 'on'
-                    }),
-                    credentials: 'include'
+                    })
                 });
                 
                 const data = await response.json();
                 
                 if (response.ok) {
-                    showAlert('Registration successful! Please login.', 'success');
+                    showAlert(data.message + ' Please login.', 'success');
                     showTab('login');
                     form.reset();
                 } else {
-                    showAlert(data.message || 'Registration failed', 'error');
+                    showAlert(data.message, 'error');
                 }
             } catch (error) {
                 showAlert('Network error. Please try again.', 'error');
             }
         }
 
-        async function logout() {
-            try {
-                const response = await fetch('/api/auth/logout', {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-                
-                if (response.ok) {
-                    showAlert('Logged out successfully', 'success');
-                    showAuth();
-                }
-            } catch (error) {
-                showAlert('Logout error', 'error');
-            }
-        }
-
-        async function checkSession() {
-            try {
-                const response = await fetch('/api/auth/profile', {
-                    credentials: 'include'
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    showDashboard(data.user);
-                }
-            } catch (error) {
-                // User not logged in, show auth forms
-            }
-        }
-
-        // Event listeners
+        // Form event listeners
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
             login();
@@ -499,8 +519,8 @@ HTML_TEMPLATE = '''
             register();
         });
 
-        // Check session on page load
-        checkSession();
+        // Set main app URL for JavaScript
+        const MAIN_APP_URL = '{{ main_app_url }}';
     </script>
 </body>
 </html>
@@ -509,7 +529,7 @@ HTML_TEMPLATE = '''
 @app.route('/')
 def index():
     """Serve the main application page"""
-    return render_template_string(HTML_TEMPLATE)
+    return render_template_string(HTML_TEMPLATE, main_app_url=MAIN_APP_URL)
 
 @app.route('/api/auth/register', methods=['POST'])
 def register():
@@ -576,7 +596,7 @@ def register():
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
-    """Authenticate user login"""
+    """Authenticate user login and return JWT token"""
     try:
         data = request.get_json()
         
@@ -617,6 +637,17 @@ def login():
         conn.commit()
         conn.close()
         
+        # Generate JWT token
+        user_data = {
+            'id': user_id,
+            'username': username,
+            'email': email,
+            'first_name': first_name,
+            'last_name': last_name
+        }
+        
+        token = generate_jwt_token(user_data)
+        
         # Log login
         log_audit(user_id, 'USER_LOGIN', 
                  f"User {username} logged in", 
@@ -625,17 +656,43 @@ def login():
         
         return jsonify({
             'message': 'Login successful',
-            'user': {
-                'id': user_id,
-                'username': username,
-                'email': email,
-                'first_name': first_name,
-                'last_name': last_name
-            }
+            'token': token,
+            'user': user_data
         }), 200
         
     except Exception as e:
         print(f"Login error: {e}")
+        return jsonify({'message': 'Internal server error'}), 500
+
+@app.route('/api/auth/verify', methods=['POST'])
+def verify_token():
+    """Verify JWT token"""
+    try:
+        data = request.get_json()
+        token = data.get('token')
+        
+        if not token:
+            return jsonify({'message': 'Token required'}), 400
+        
+        try:
+            payload = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+            return jsonify({
+                'valid': True,
+                'user': {
+                    'id': payload['user_id'],
+                    'username': payload['username'],
+                    'email': payload['email'],
+                    'first_name': payload['first_name'],
+                    'last_name': payload['last_name']
+                }
+            }), 200
+        except jwt.ExpiredSignatureError:
+            return jsonify({'valid': False, 'message': 'Token expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'valid': False, 'message': 'Invalid token'}), 401
+            
+    except Exception as e:
+        print(f"Token verification error: {e}")
         return jsonify({'message': 'Internal server error'}), 500
 
 @app.route('/api/auth/logout', methods=['POST'])
@@ -700,19 +757,16 @@ def profile():
         print(f"Profile error: {e}")
         return jsonify({'message': 'Internal server error'}), 500
 
-@app.route('/health', methods=['GET'])
+@app.route('/health')
 def health():
     """Health check endpoint"""
     return jsonify({'status': 'healthy', 'timestamp': datetime.now(timezone.utc).isoformat()}), 200
 
-# Initialize database on startup
 if __name__ == '__main__':
-    print("Starting Medical Authentication Platform...")
+    # Initialize database
     init_db()
     
-    # Get port from environment variable (for deployment platforms)
+    # Run the application
     port = int(os.environ.get('PORT', 5000))
-    
-    # Run the app
     app.run(host='0.0.0.0', port=port, debug=False)
 
