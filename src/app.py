@@ -2,74 +2,169 @@ import io
 import os
 import datetime
 import openai
-import jwt
+import sqlite3
+import hashlib
 import secrets
 from functools import wraps
-from flask import Flask, request, render_template, redirect, url_for, jsonify, session
+from flask import Flask, request, render_template, redirect, url_for, jsonify, session, flash
 from openai import OpenAI
 
 app = Flask(__name__)
 
-# Configure session
+# Configure session with secure settings
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS only
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # No JavaScript access
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
 
-# Authentication configuration
-AUTH_PLATFORM_URL = 'https://medical-auth-platform.onrender.com'  # Updated to separate service URL
+# Database configuration
+DATABASE_URL = os.environ.get('DATABASE_URL', 'medical_app.db')
 
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
-def verify_jwt_token(token):
-    """Verify JWT token and return user data"""
+def init_db():
+    """Initialize the database with required tables"""
     try:
-        # Use the same secret key as the auth platform
-        secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
-        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
-        return payload
-    except jwt.ExpiredSignatureError:
-        return None
-    except jwt.InvalidTokenError:
-        return None
+        conn = sqlite3.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        
+        # Create users table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                first_name TEXT NOT NULL,
+                last_name TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                salt TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP,
+                is_active BOOLEAN DEFAULT 1,
+                consent_given BOOLEAN DEFAULT 0,
+                consent_date TIMESTAMP
+            )
+        ''')
+        
+        # Create transcription_history table for user's previous outputs
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS transcription_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                verslag_type TEXT NOT NULL,
+                original_transcript TEXT,
+                structured_report TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )
+        ''')
+        
+        conn.commit()
+        conn.close()
+        print("Database initialized successfully")
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+
+def hash_password(password, salt=None):
+    """Hash password with salt using SHA-256"""
+    if salt is None:
+        salt = secrets.token_hex(32)
+    
+    password_hash = hashlib.sha256((password + salt).encode()).hexdigest()
+    return password_hash, salt
+
+def verify_password(password, stored_hash, salt):
+    """Verify password against stored hash"""
+    password_hash, _ = hash_password(password, salt)
+    return password_hash == stored_hash
+
+def create_user(username, email, first_name, last_name, password, consent_given=True):
+    """Create a new user in the database"""
+    try:
+        conn = sqlite3.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        
+        # Check if user already exists
+        cursor.execute('SELECT id FROM users WHERE username = ? OR email = ?', (username, email))
+        if cursor.fetchone():
+            conn.close()
+            return False, "Username or email already exists"
+        
+        # Hash password
+        password_hash, salt = hash_password(password)
+        
+        # Insert user
+        cursor.execute('''
+            INSERT INTO users (username, email, first_name, last_name, password_hash, salt, consent_given, consent_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (username, email, first_name, last_name, password_hash, salt, consent_given, datetime.datetime.now()))
+        
+        conn.commit()
+        user_id = cursor.lastrowid
+        conn.close()
+        
+        return True, user_id
+    except Exception as e:
+        return False, str(e)
+
+def authenticate_user(username, password):
+    """Authenticate user and return user data"""
+    try:
+        conn = sqlite3.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, username, email, first_name, last_name, password_hash, salt, is_active
+            FROM users WHERE username = ?
+        ''', (username,))
+        
+        user = cursor.fetchone()
+        conn.close()
+        
+        if not user:
+            return False, "Invalid credentials"
+        
+        user_id, username, email, first_name, last_name, stored_hash, salt, is_active = user
+        
+        if not is_active:
+            return False, "Account is disabled"
+        
+        if verify_password(password, stored_hash, salt):
+            # Update last login
+            conn = sqlite3.connect(DATABASE_URL)
+            cursor = conn.cursor()
+            cursor.execute('UPDATE users SET last_login = ? WHERE id = ?', (datetime.datetime.now(), user_id))
+            conn.commit()
+            conn.close()
+            
+            return True, {
+                'id': user_id,
+                'username': username,
+                'email': email,
+                'first_name': first_name,
+                'last_name': last_name,
+                'full_name': f"{first_name} {last_name}"
+            }
+        else:
+            return False, "Invalid credentials"
+    except Exception as e:
+        return False, str(e)
 
 def login_required(f):
     """Decorator to require authentication for routes"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Check if user is already in session
-        if 'user_id' in session and 'username' in session:
-            return f(*args, **kwargs)
-        
-        # Check for authentication parameters in URL (from auth platform redirect)
-        token = request.args.get('token')
-        user = request.args.get('user')
-        name = request.args.get('name')
-        email = request.args.get('email')
-        
-        if token:
-            # Verify the JWT token
-            user_data = verify_jwt_token(token)
-            if user_data:
-                # Store user data in session
-                session['user_id'] = user_data['user_id']
-                session['username'] = user_data['username']
-                session['email'] = user_data['email']
-                session['first_name'] = user_data['first_name']
-                session['last_name'] = user_data['last_name']
-                session['full_name'] = f"{user_data['first_name']} {user_data['last_name']}"
-                
-                # Redirect to clean URL without parameters
-                return redirect(url_for(request.endpoint))
-        
-        # If no valid authentication, redirect to auth platform
-        return redirect(AUTH_PLATFORM_URL)
-    
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
     return decorated_function
 
 def get_current_user():
     """Get current user data from session"""
     if 'user_id' in session:
         return {
-            'user_id': session['user_id'],
+            'id': session['user_id'],
             'username': session['username'],
             'email': session['email'],
             'first_name': session['first_name'],
@@ -77,6 +172,27 @@ def get_current_user():
             'full_name': session['full_name']
         }
     return None
+
+def save_transcription(user_id, verslag_type, original_transcript, structured_report):
+    """Save transcription to user's history"""
+    try:
+        conn = sqlite3.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO transcription_history (user_id, verslag_type, original_transcript, structured_report)
+            VALUES (?, ?, ?, ?)
+        ''', (user_id, verslag_type, original_transcript, structured_report))
+        
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error saving transcription: {e}")
+        return False
+
+# Initialize database on startup
+init_db()
 
 def call_gpt(messages, model="gpt-4o", temperature=0.0):
     """Call GPT with error handling"""
@@ -209,6 +325,83 @@ def detect_hallucination(structured_report, transcript):
         return True, f"Mogelijk hallucinatie: zeer kort dictaat ({transcript_words} woorden) maar uitgebreid verslag ({report_words} woorden)"
     
     return False, None
+
+# Authentication Routes
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Login route"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if not username or not password:
+            flash('Please enter both username and password', 'error')
+            return render_template('login.html')
+        
+        success, result = authenticate_user(username, password)
+        
+        if success:
+            # Store user data in session
+            session['user_id'] = result['id']
+            session['username'] = result['username']
+            session['email'] = result['email']
+            session['first_name'] = result['first_name']
+            session['last_name'] = result['last_name']
+            session['full_name'] = result['full_name']
+            
+            flash('Login successful!', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash(result, 'error')
+            return render_template('login.html')
+    
+    # If user is already logged in, redirect to main app
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+    
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """Register route"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        password = request.form.get('password')
+        consent_given = request.form.get('consent_given') == 'on'
+        
+        # Validate required fields
+        if not all([username, email, first_name, last_name, password]):
+            flash('All fields are required', 'error')
+            return render_template('register.html')
+        
+        if not consent_given:
+            flash('GDPR consent is required', 'error')
+            return render_template('register.html')
+        
+        success, result = create_user(username, email, first_name, last_name, password, consent_given)
+        
+        if success:
+            flash('Registration successful! Please login.', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash(result, 'error')
+            return render_template('register.html')
+    
+    # If user is already logged in, redirect to main app
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+    
+    return render_template('register.html')
+
+@app.route('/logout')
+def logout():
+    """Logout route"""
+    session.clear()
+    flash('You have been logged out successfully', 'info')
+    return redirect(url_for('login'))
 
 @app.route('/')
 @login_required
@@ -640,10 +833,16 @@ Maak een professioneel medisch verslag van de volgende dictatie:
                                      error=error_msg,
                                      verslag_type=verslag_type)
 
+        # Save transcription to user's history
+        user = get_current_user()
+        if user:
+            save_transcription(user['id'], verslag_type, corrected_transcript, structured)
+
         return render_template('index.html', 
                              transcript=corrected_transcript,
                              structured=structured,
-                             verslag_type=verslag_type)
+                             verslag_type=verslag_type,
+                             user=user)
 
     except Exception as e:
         return render_template('index.html', error=f"Er is een fout opgetreden: {str(e)}")
@@ -700,12 +899,6 @@ Verbeter het volgende verslag:
     except Exception as e:
         print(f"Error in verbeter: {e}")
         return jsonify({'success': False, 'error': str(e)})
-
-@app.route('/logout')
-def logout():
-    """Logout user and redirect to authentication platform"""
-    session.clear()
-    return redirect(AUTH_PLATFORM_URL)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
