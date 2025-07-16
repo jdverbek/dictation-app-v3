@@ -5,6 +5,8 @@ import openai
 import sqlite3
 import hashlib
 import secrets
+import time
+import logging
 from functools import wraps
 from flask import Flask, request, render_template, redirect, url_for, jsonify, session, flash
 from openai import OpenAI
@@ -16,6 +18,106 @@ app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS only
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # No JavaScript access
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
+app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(hours=2)  # Session timeout
+
+# Security configuration
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
+
+# Configure logging for security audit
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('security_audit.log'),
+        logging.StreamHandler()
+    ]
+)
+security_logger = logging.getLogger('security_audit')
+
+# Rate limiting storage (in production, use Redis)
+rate_limit_storage = {}
+
+@app.after_request
+def add_security_headers(response):
+    """Add comprehensive security headers to all responses"""
+    # Content Security Policy - Prevent XSS attacks
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: blob:; "
+        "media-src 'self' blob:; "
+        "connect-src 'self'; "
+        "font-src 'self'; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self'"
+    )
+    
+    # Strict Transport Security - Force HTTPS
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
+    
+    # Prevent clickjacking
+    response.headers['X-Frame-Options'] = 'DENY'
+    
+    # Prevent MIME sniffing
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    
+    # XSS Protection
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    # Referrer Policy
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # Permissions Policy
+    response.headers['Permissions-Policy'] = (
+        "camera=(), microphone=(), geolocation=(), "
+        "payment=(), usb=(), magnetometer=(), gyroscope=()"
+    )
+    
+    # Remove server information
+    response.headers.pop('Server', None)
+    
+    return response
+
+def rate_limit(max_requests=10, window=60):
+    """Rate limiting decorator"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
+            current_time = time.time()
+            
+            # Clean old entries
+            rate_limit_storage[client_ip] = [
+                timestamp for timestamp in rate_limit_storage.get(client_ip, [])
+                if current_time - timestamp < window
+            ]
+            
+            # Check rate limit
+            if len(rate_limit_storage.get(client_ip, [])) >= max_requests:
+                security_logger.warning(f"Rate limit exceeded for IP: {client_ip}")
+                return jsonify({'error': 'Rate limit exceeded'}), 429
+            
+            # Add current request
+            if client_ip not in rate_limit_storage:
+                rate_limit_storage[client_ip] = []
+            rate_limit_storage[client_ip].append(current_time)
+            
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+def log_security_event(event_type, user_id=None, details=None):
+    """Log security-related events for audit trail"""
+    client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
+    user_agent = request.headers.get('User-Agent', 'Unknown')
+    
+    security_logger.info(f"SECURITY_EVENT: {event_type} | "
+                        f"User: {user_id} | "
+                        f"IP: {client_ip} | "
+                        f"UserAgent: {user_agent} | "
+                        f"Details: {details}")
 
 # Database configuration
 DATABASE_URL = os.environ.get('DATABASE_URL', 'medical_app.db')
@@ -369,14 +471,23 @@ def detect_hallucination(structured_report, transcript):
 
 # Authentication Routes
 @app.route('/login', methods=['GET', 'POST'])
+@rate_limit(max_requests=5, window=300)  # 5 attempts per 5 minutes
 def login():
-    """Login route"""
+    """Login route with security logging"""
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
         
+        # Input validation
         if not username or not password:
+            log_security_event('LOGIN_ATTEMPT_FAILED', details='Missing credentials')
             flash('Please enter both username and password', 'error')
+            return render_template('login.html')
+        
+        # Sanitize username input
+        if len(username) > 50 or any(char in username for char in ['<', '>', '"', "'"]):
+            log_security_event('LOGIN_ATTEMPT_SUSPICIOUS', details=f'Invalid username format: {username[:20]}')
+            flash('Invalid username format', 'error')
             return render_template('login.html')
         
         success, result = authenticate_user(username, password)
@@ -389,10 +500,13 @@ def login():
             session['first_name'] = result['first_name']
             session['last_name'] = result['last_name']
             session['full_name'] = result['full_name']
+            session.permanent = True  # Enable session timeout
             
+            log_security_event('LOGIN_SUCCESS', user_id=result['id'], details=f'User: {username}')
             flash('Login successful!', 'success')
             return redirect(url_for('index'))
         else:
+            log_security_event('LOGIN_ATTEMPT_FAILED', details=f'Failed login for username: {username}')
             flash(result, 'error')
             return render_template('login.html')
     
@@ -403,43 +517,81 @@ def login():
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
+@rate_limit(max_requests=3, window=300)  # 3 attempts per 5 minutes
 def register():
-    """Register route"""
+    """Register route with security logging"""
     if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        first_name = request.form.get('first_name')
-        last_name = request.form.get('last_name')
-        password = request.form.get('password')
-        consent_given = request.form.get('consent_given') == 'on'
+        # Get and sanitize form data
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        password = request.form.get('password', '')
+        gdpr_consent = request.form.get('gdpr_consent') == 'on'
         
-        # Validate required fields
+        # Input validation
         if not all([username, email, first_name, last_name, password]):
+            log_security_event('REGISTRATION_ATTEMPT_FAILED', details='Missing required fields')
             flash('All fields are required', 'error')
             return render_template('register.html')
         
-        if not consent_given:
-            flash('GDPR consent is required', 'error')
+        # Validate input lengths and characters
+        if (len(username) > 50 or len(email) > 100 or 
+            len(first_name) > 50 or len(last_name) > 50):
+            log_security_event('REGISTRATION_ATTEMPT_SUSPICIOUS', details='Field length exceeded')
+            flash('Input fields too long', 'error')
             return render_template('register.html')
         
-        success, result = create_user(username, email, first_name, last_name, password, consent_given)
+        # Check for suspicious characters
+        suspicious_chars = ['<', '>', '"', "'", '&', 'script', 'javascript']
+        for field in [username, email, first_name, last_name]:
+            if any(char in field.lower() for char in suspicious_chars):
+                log_security_event('REGISTRATION_ATTEMPT_SUSPICIOUS', 
+                                 details=f'Suspicious characters in input: {field[:20]}')
+                flash('Invalid characters in input fields', 'error')
+                return render_template('register.html')
+        
+        # Validate email format
+        import re
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, email):
+            log_security_event('REGISTRATION_ATTEMPT_FAILED', details=f'Invalid email format: {email}')
+            flash('Invalid email format', 'error')
+            return render_template('register.html')
+        
+        # Password strength validation
+        if len(password) < 8:
+            log_security_event('REGISTRATION_ATTEMPT_FAILED', details='Weak password')
+            flash('Password must be at least 8 characters long', 'error')
+            return render_template('register.html')
+        
+        if not gdpr_consent:
+            log_security_event('REGISTRATION_ATTEMPT_FAILED', details='GDPR consent not given')
+            flash('You must agree to the GDPR terms to register', 'error')
+            return render_template('register.html')
+        
+        success, result = create_user(username, email, first_name, last_name, password)
         
         if success:
+            log_security_event('REGISTRATION_SUCCESS', details=f'New user: {username}, Email: {email}')
             flash('Registration successful! Please login.', 'success')
             return redirect(url_for('login'))
         else:
+            log_security_event('REGISTRATION_ATTEMPT_FAILED', details=f'Registration failed: {result}')
             flash(result, 'error')
             return render_template('register.html')
-    
-    # If user is already logged in, redirect to main app
-    if 'user_id' in session:
-        return redirect(url_for('index'))
     
     return render_template('register.html')
 
 @app.route('/logout')
 def logout():
-    """Logout route"""
+    """Logout route with security logging"""
+    user_id = session.get('user_id')
+    username = session.get('username')
+    
+    if user_id:
+        log_security_event('LOGOUT_SUCCESS', user_id=user_id, details=f'User: {username}')
+    
     session.clear()
     flash('You have been logged out successfully', 'info')
     return redirect(url_for('login'))
@@ -463,17 +615,46 @@ def index():
 
 @app.route('/transcribe', methods=['POST'])
 @login_required
+@rate_limit(max_requests=20, window=300)  # 20 transcriptions per 5 minutes
 def transcribe():
+    user = get_current_user()
+    if not user:
+        return redirect(url_for('login'))
+    
     try:
-        # Get form data
+        # Get and validate form data
         verslag_type = request.form.get('verslag_type', 'TTE')
         patient_id = request.form.get('patient_id', '').strip()
         disable_hallucination = request.form.get('disable_hallucination_detection') == 'true'
+        
+        # Validate verslag_type
+        allowed_types = ['TTE', 'TEE', 'Anamnese', 'Stress echo', 'Holter', 'Pacemaker controle']
+        if verslag_type not in allowed_types:
+            log_security_event('TRANSCRIBE_ATTEMPT_SUSPICIOUS', user_id=user['id'], 
+                             details=f'Invalid verslag_type: {verslag_type}')
+            return jsonify({'error': 'Invalid report type'}), 400
+        
+        # Validate patient_id
+        if patient_id:
+            if len(patient_id) > 50 or any(char in patient_id for char in ['<', '>', '"', "'"]):
+                log_security_event('TRANSCRIBE_ATTEMPT_SUSPICIOUS', user_id=user['id'], 
+                                 details=f'Invalid patient_id format: {patient_id[:20]}')
+                return jsonify({'error': 'Invalid patient ID format'}), 400
         
         # Handle file upload
         if 'audio_file' in request.files:
             audio_file = request.files['audio_file']
             if audio_file.filename != '':
+                # Validate file size and type
+                if audio_file.content_length and audio_file.content_length > 50 * 1024 * 1024:  # 50MB
+                    log_security_event('TRANSCRIBE_ATTEMPT_FAILED', user_id=user['id'], 
+                                     details='File too large')
+                    return jsonify({'error': 'File too large (max 50MB)'}), 400
+                
+                # Log transcription attempt
+                log_security_event('TRANSCRIBE_ATTEMPT', user_id=user['id'], 
+                                 details=f'Type: {verslag_type}, Patient: {patient_id or "None"}')
+                
                 # Process audio file with Whisper
                 if verslag_type == 'Anamnese':
                     prompt = "Dit is een conversatie tussen een arts en een patiënt in het West-Vlaams dialect. Transcribeer de volledige conversatie."
