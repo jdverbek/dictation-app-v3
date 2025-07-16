@@ -52,6 +52,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS transcription_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
+                patient_id TEXT,
                 verslag_type TEXT NOT NULL,
                 original_transcript TEXT,
                 structured_report TEXT,
@@ -59,6 +60,13 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         ''')
+        
+        # Add patient_id column if it doesn't exist (for existing databases)
+        try:
+            cursor.execute('ALTER TABLE transcription_history ADD COLUMN patient_id TEXT')
+        except sqlite3.OperationalError:
+            # Column already exists
+            pass
         
         conn.commit()
         conn.close()
@@ -173,16 +181,16 @@ def get_current_user():
         }
     return None
 
-def save_transcription(user_id, verslag_type, original_transcript, structured_report):
+def save_transcription(user_id, verslag_type, original_transcript, structured_report, patient_id=None):
     """Save transcription to user's history"""
     try:
         conn = sqlite3.connect(DATABASE_URL)
         cursor = conn.cursor()
         
         cursor.execute('''
-            INSERT INTO transcription_history (user_id, verslag_type, original_transcript, structured_report)
-            VALUES (?, ?, ?, ?)
-        ''', (user_id, verslag_type, original_transcript, structured_report))
+            INSERT INTO transcription_history (user_id, patient_id, verslag_type, original_transcript, structured_report)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (user_id, patient_id, verslag_type, original_transcript, structured_report))
         
         conn.commit()
         conn.close()
@@ -190,6 +198,39 @@ def save_transcription(user_id, verslag_type, original_transcript, structured_re
     except Exception as e:
         print(f"Error saving transcription: {e}")
         return False
+
+def get_user_transcription_history(user_id, limit=50):
+    """Get user's transcription history"""
+    try:
+        conn = sqlite3.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, patient_id, verslag_type, original_transcript, structured_report, created_at
+            FROM transcription_history 
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            LIMIT ?
+        ''', (user_id, limit))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        history = []
+        for row in rows:
+            history.append({
+                'id': row[0],
+                'patient_id': row[1] or 'Niet opgegeven',
+                'verslag_type': row[2],
+                'original_transcript': row[3],
+                'structured_report': row[4],
+                'created_at': row[5]
+            })
+        
+        return history
+    except Exception as e:
+        print(f"Error getting transcription history: {e}")
+        return []
 
 # Initialize database on startup
 init_db()
@@ -403,6 +444,17 @@ def logout():
     flash('You have been logged out successfully', 'info')
     return redirect(url_for('login'))
 
+@app.route('/prior-reports')
+@login_required
+def prior_reports():
+    """View user's prior transcription reports"""
+    user = get_current_user()
+    if not user:
+        return redirect(url_for('login'))
+    
+    history = get_user_transcription_history(user['id'])
+    return render_template('prior_reports.html', user=user, history=history)
+
 @app.route('/')
 @login_required
 def index():
@@ -415,6 +467,7 @@ def transcribe():
     try:
         # Get form data
         verslag_type = request.form.get('verslag_type', 'TTE')
+        patient_id = request.form.get('patient_id', '').strip()
         disable_hallucination = request.form.get('disable_hallucination_detection') == 'true'
         
         # Handle file upload
@@ -836,7 +889,7 @@ Maak een professioneel medisch verslag van de volgende dictatie:
         # Save transcription to user's history
         user = get_current_user()
         if user:
-            save_transcription(user['id'], verslag_type, corrected_transcript, structured)
+            save_transcription(user['id'], verslag_type, corrected_transcript, structured, patient_id)
 
         return render_template('index.html', 
                              transcript=corrected_transcript,
