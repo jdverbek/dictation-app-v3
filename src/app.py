@@ -69,9 +69,9 @@ def add_security_headers(response):
     # Referrer Policy
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     
-    # Permissions Policy
+    # Permissions Policy - Allow camera for barcode scanning
     response.headers['Permissions-Policy'] = (
-        "camera=(), microphone=(), geolocation=(), "
+        "camera=(self), microphone=(), geolocation=(), "
         "payment=(), usb=(), magnetometer=(), gyroscope=()"
     )
     
@@ -527,7 +527,7 @@ def register():
         first_name = request.form.get('first_name', '').strip()
         last_name = request.form.get('last_name', '').strip()
         password = request.form.get('password', '')
-        gdpr_consent = request.form.get('gdpr_consent') == 'on'
+        gdpr_consent = request.form.get('consent_given') == 'on'
         
         # Input validation
         if not all([username, email, first_name, last_name, password]):
@@ -606,6 +606,17 @@ def prior_reports():
     
     history = get_user_transcription_history(user['id'])
     return render_template('prior_reports.html', user=user, history=history)
+
+# SEO and Security Routes
+@app.route('/robots.txt')
+def robots_txt():
+    """Serve robots.txt file"""
+    return app.send_static_file('robots.txt')
+
+@app.route('/sitemap.xml')
+def sitemap_xml():
+    """Serve sitemap.xml file"""
+    return app.send_static_file('sitemap.xml')
 
 @app.route('/')
 @login_required
