@@ -138,8 +138,27 @@ def log_security_event(event_type, user_id=None, details=None):
 # Database configuration
 DATABASE_URL = os.environ.get('DATABASE_URL', 'medical_app.db')
 
-# Initialize OpenAI client
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+# Initialize OpenAI client conditionally
+def get_openai_client():
+    """Get OpenAI client with proper error handling"""
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        return None
+    try:
+        return OpenAI(api_key=api_key)
+    except Exception as e:
+        print(f"Warning: Failed to initialize OpenAI client: {e}")
+        return None
+
+# Global client instance (initialized lazily)
+_openai_client = None
+
+def get_client():
+    """Get or create OpenAI client"""
+    global _openai_client
+    if _openai_client is None:
+        _openai_client = get_openai_client()
+    return _openai_client
 
 def init_db():
     """Initialize the database with required tables"""
@@ -356,6 +375,10 @@ init_db()
 def call_gpt(messages, model="gpt-4o", temperature=0.0):
     """Call GPT with error handling"""
     try:
+        client = get_client()
+        if not client:
+            return "Error: OpenAI API key not configured"
+        
         response = client.chat.completions.create(
             model=model,
             messages=messages,
@@ -715,6 +738,10 @@ def transcribe():
                     else:
                         content_type = audio_file.content_type
                         filename = audio_file.filename
+                    
+                    client = get_client()
+                    if not client:
+                        return render_template('index.html', error="OpenAI API key not configured")
                     
                     transcript = client.audio.transcriptions.create(
                         model="whisper-1",
