@@ -2,9 +2,12 @@
 Core analysis modules for the Medical Dictation App
 """
 
-from .history_analyzer import HistoryAnalyzer
-from .clinical_examiner import ClinicalExaminer
+# Import only existing modules
+try:
+    from .medical_knowledge_system import get_knowledge_system, MedicalKnowledgeSystem
+    __all__ = ['get_knowledge_system', 'MedicalKnowledgeSystem']
+except ImportError:
+    __all__ = []
 
-__all__ = ['HistoryAnalyzer', 'ClinicalExaminer']
-__version__ = '2.0.0'
+__version__ = '3.0.0'
 

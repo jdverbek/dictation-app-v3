@@ -1,33 +1,43 @@
 """
-Medical Knowledge System with BCFI.be Integration
-Provides drug recognition, document learning, and knowledge enhancement
+Medical Knowledge System with BCFI Integration, Belgian Drug Pronunciation, and Contextual Selection
 """
 
 import os
 import re
-import json
 import sqlite3
+import logging
 import requests
-import pandas as pd
-from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
-import logging
+from datetime import datetime
 
+# Import pronunciation and contextual systems
+try:
+    from .belgian_drug_pronunciation import get_belgian_pronunciation_system
+    from .contextual_drug_selector import get_contextual_drug_selector, DrugContext
+    PRONUNCIATION_AVAILABLE = True
+except ImportError:
+    PRONUNCIATION_AVAILABLE = False
+
+# Optional imports
 try:
     import chromadb
     from chromadb.config import Settings
     CHROMADB_AVAILABLE = True
 except ImportError:
     CHROMADB_AVAILABLE = False
-    print("Warning: ChromaDB not available. Install with: pip install chromadb>=0.4.0")
 
 try:
     from bs4 import BeautifulSoup
     BS4_AVAILABLE = True
 except ImportError:
     BS4_AVAILABLE = False
-    print("Warning: BeautifulSoup not available. Install with: pip install beautifulsoup4>=4.12.0")
+
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 

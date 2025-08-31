@@ -768,23 +768,49 @@ def process_audio():
             # Generate medical report using GPT
             report_text = generate_medical_report(transcript_text, patient_id)
             
-            # Enhance with knowledge system if available
-            if KNOWLEDGE_API_AVAILABLE:
-                try:
-                    enhancement = enhance_existing_transcription(transcript_text, patient_id)
-                    if enhancement.get('enhancement_applied'):
-                        # Use enhanced transcript for report generation
-                        enhanced_transcript = enhancement['enhanced_transcript']
-                        report_text = generate_medical_report(enhanced_transcript, patient_id)
-                        
-                        # Add drug information to report
-                        if enhancement.get('drug_corrections'):
-                            drug_info = "\n\nGEÏDENTIFICEERDE MEDICATIE:\n"
-                            for correction in enhancement['drug_corrections']:
-                                drug_info += f"- {correction['corrected']} (ATC: {correction['atc_code']})\n"
-                            report_text += drug_info
-                except Exception as e:
-                    logger.warning(f"Knowledge enhancement failed: {e}")
+            # Enhance with multi-agent system
+            try:
+                from core.multi_agent_orchestrator import get_multi_agent_orchestrator
+                from core.contextual_drug_selector import DrugContext
+                
+                orchestrator = get_multi_agent_orchestrator(DATABASE_URL)
+                
+                # Create patient context
+                patient_context = DrugContext(
+                    medical_condition="General medical consultation",
+                    department="General",
+                    patient_age_group="adult",
+                    contraindications=[],
+                    current_medications=[],
+                    allergies=[],
+                    severity="moderate",
+                    urgency="routine"
+                )
+                
+                # Process with multi-agent system
+                multi_agent_result = orchestrator.process_transcript_intelligently(
+                    transcript_text,
+                    patient_id=patient_id,
+                    medical_context="Medical consultation",
+                    department="General"
+                )
+                
+                # Use enhanced transcript if improvements were made
+                if multi_agent_result['total_improvements'] > 0:
+                    enhanced_transcript = multi_agent_result['final_transcript']
+                    report_text = generate_medical_report(enhanced_transcript, patient_id)
+                    
+                    # Add agent feedback to report
+                    agent_feedback = multi_agent_result['agent_feedback']
+                    report_text += f"\n\n--- SYSTEEM VERWERKING ---\n{agent_feedback}"
+                    
+                    logger.info(f"Multi-agent processing: {multi_agent_result['total_improvements']} improvements, {multi_agent_result['final_confidence']:.2%} confidence")
+                else:
+                    enhanced_transcript = transcript_text
+                    
+            except Exception as e:
+                logger.warning(f"Multi-agent processing failed: {e}")
+                enhanced_transcript = transcript_text
             
             # Store job data in database
             conn = sqlite3.connect(DATABASE_URL)
