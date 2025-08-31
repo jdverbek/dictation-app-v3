@@ -1,18 +1,36 @@
 services:
-  # Enhanced Medical Dictation App
+  # Enhanced Medical Dictation App v3.0
   - type: web
-    name: medical-transcription-app
+    name: medical-dictation-app-v3
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --config gunicorn.conf.py src.app:app
+    region: oregon
+    plan: starter
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: cd src && gunicorn main:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
-      - key: OPENAI_API_KEY
-        sync: false
+        value: 3.11.9
       - key: FLASK_ENV
         value: production
       - key: FLASK_DEBUG
         value: false
-    plan: free
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CLAUDE_API_KEY
+        value: CLAUDE_API_KEY_PLACEHOLDER
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: medical-dictation-redis
+          property: connectionString
+    healthCheckPath: /api/health
+    
+  # Redis for background processing
+  - type: redis
+    name: medical-dictation-redis
+    region: oregon
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
 
