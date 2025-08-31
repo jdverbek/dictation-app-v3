@@ -11,7 +11,13 @@ from functools import wraps
 from flask import Flask, request, render_template, redirect, url_for, jsonify, session, flash
 from openai import OpenAI
 
+# Import enhanced API
+from api.enhanced_api import enhanced_api
+
 app = Flask(__name__)
+
+# Register enhanced API blueprint
+app.register_blueprint(enhanced_api)
 
 # Configure session with secure settings
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -622,6 +628,12 @@ def sitemap_xml():
 @login_required
 def index():
     user = get_current_user()
+    return render_template('enhanced_index.html', user=user)
+
+@app.route('/classic')
+@login_required
+def classic_index():
+    user = get_current_user()
     return render_template('index.html', user=user)
 
 @app.route('/transcribe', methods=['POST'])
@@ -1144,7 +1156,6 @@ Verbeter het volgende verslag:
     except Exception as e:
         print(f"Error in verbeter: {e}")
         return jsonify({'success': False, 'error': str(e)})
-
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
 

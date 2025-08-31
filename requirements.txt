@@ -6,3 +6,23 @@ gunicorn>=21.2.0
 openai>=1.0.0
 cryptography>=41.0.0
 
+# Background processing
+celery==5.3.4
+redis==5.0.1
+
+# OCR and image processing
+opencv-python==4.8.1.78
+pytesseract==0.3.10
+Pillow==10.1.0
+numpy==1.24.3
+
+# Additional utilities
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Security
+bcrypt==4.1.2
+
+# API client for Claude
+anthropic==0.7.8
+

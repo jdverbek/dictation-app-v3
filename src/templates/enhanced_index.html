@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Dictation App v2.0 - Enhanced</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .version-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .main-panel {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+        
+        .patient-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-radius: 20px;
+            border: 2px solid #2196F3;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1976d2;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
+            transform: scale(1.02);
+        }
+        
+        .ocr-section {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: end;
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border-radius: 15px;
+            border: 2px dashed #FF9800;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #FF9800, #f57c00);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+        }
+        
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+        }
+        
+        .ocr-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+            white-space: nowrap;
+        }
+        
+        .ocr-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(156, 39, 176, 0.4);
+        }
+        
+        .recording-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+            border-radius: 20px;
+            border: 2px solid #9C27B0;
+        }
+        
+        .recording-controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .record-btn {
+            padding: 20px 40px;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.15);
+        }
+        
+        .record-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+        
+        .btn-start {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+        
+        .btn-stop {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+        
+        .btn-stop:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .recording-status {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .recording-timer {
+            font-size: 24px;
+            font-weight: 700;
+            color: #f44336;
+            text-align: center;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .upload-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+            border-radius: 20px;
+            border: 2px solid #4CAF50;
+        }
+        
+        .upload-controls {
+            display: flex;
+            gap: 20px;
+            align-items: end;
+        }
+        
+        .upload-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            white-space: nowrap;
+        }
+        
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            z-index: 1001;
+            animation: slideInFromTop 0.5s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .notification-success {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+        
+        .notification-error {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+        
+        .notification-info {
+            background: linear-gradient(135deg, #2196F3, #1976d2);
+            color: white;
+        }
+        
+        @keyframes slideInFromTop {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .claude-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .feature-description {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .main-panel {
+                padding: 25px;
+            }
+            
+            .ocr-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .recording-controls {
+                flex-direction: column;
+            }
+            
+            .upload-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏥 Medical Dictation App</h1>
+            <p>Geavanceerde medische transcriptie met AI-verificatie</p>
+            <div class="version-badge">v2.0 Enhanced</div>
+        </div>
+        
+        <!-- Main Panel -->
+        <div class="main-panel">
+            <!-- Patient Information Section -->
+            <div class="patient-section">
+                <h2 class="section-title">
+                    👤 Patiëntinformatie
+                </h2>
+                
+                <div class="input-group">
+                    <label class="input-label" for="patient_id">Patiënt ID</label>
+                    <input type="text" id="patient_id" class="input-field" 
+                           placeholder="Voer patiënt ID in of scan polsbandje">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label" for="patient_dob">Geboortedatum (optioneel)</label>
+                    <input type="date" id="patient_dob" class="input-field">
+                </div>
+                
+                <!-- OCR Section -->
+                <div class="ocr-section">
+                    <div>
+                        <label class="input-label">📷 Scan Patiënt Polsbandje/Kaart</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="patient_image" class="file-input" 
+                                   accept="image/*" capture="environment">
+                            <label for="patient_image" class="file-input-label">
+                                📸 Foto maken/uploaden
+                            </label>
+                        </div>
+                    </div>
+                    <button class="ocr-btn" onclick="extractPatientInfo()">
+                        🔍 Gegevens extraheren
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Recording Section -->
+            <div class="recording-section">
+                <h2 class="section-title">
+                    🎤 Audio Opname
+                </h2>
+                
+                <div class="recording-status" id="recording-status">
+                    ⏹️ Klaar voor opname
+                </div>
+                
+                <div class="recording-timer" id="recording-timer">
+                    00:00
+                </div>
+                
+                <div class="recording-controls">
+                    <button class="record-btn btn-start" id="start-recording">
+                        🎙️ Start Opname
+                    </button>
+                    <button class="record-btn btn-stop" id="stop-recording" disabled>
+                        ⏹️ Stop Opname
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <h2 class="section-title">
+                    📁 Bestand Uploaden
+                </h2>
+                
+                <div class="upload-controls">
+                    <div style="flex: 1;">
+                        <label class="input-label" for="audio_file">Audio Bestand</label>
+                        <input type="file" id="audio_file" class="input-field" 
+                               accept="audio/*,.webm,.mp4,.wav,.mp3,.ogg">
+                    </div>
+                    <button class="upload-btn" onclick="uploadFile()">
+                        🚀 Verwerken
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Features Grid -->
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <div class="feature-title">Claude Opus Validatie</div>
+                <div class="feature-description">
+                    Geavanceerde medische validatie met Claude Opus AI voor maximale nauwkeurigheid
+                    <span class="claude-badge">🧠 AI</span>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <div class="feature-title">Zelf-Correctie</div>
+                <div class="feature-description">
+                    Automatische iteratieve verificatie en correctie achter de schermen
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📷</div>
+                <div class="feature-title">OCR Patiënt ID</div>
+                <div class="feature-description">
+                    Automatische extractie van patiëntgegevens uit polsbandjes en kaarten
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">Achtergrond Verwerking</div>
+                <div class="feature-description">
+                    Snelle verwerking met Celery en Redis voor optimale gebruikerservaring
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📝</div>
+                <div class="feature-title">Review Interface</div>
+                <div class="feature-description">
+                    Uitgebreide review en edit interface met versiegeschiedenis
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <div class="feature-title">OWASP Beveiliging</div>
+                <div class="feature-description">
+                    Volledige OWASP compliance met geavanceerde beveiligingsmaatregelen
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Include enhanced audio handler -->
+    <script src="{{ url_for('static', filename='js/enhanced_audio_handler.js') }}"></script>
+    
+    <script>
+        // Enhanced interface functionality
+        class EnhancedInterface {
+            constructor() {
+                this.init();
+            }
+            
+            init() {
+                console.log('Initializing Enhanced Medical Dictation Interface...');
+                
+                // Set up patient image handler
+                document.getElementById('patient_image').addEventListener('change', (e) => {
+                    this.handlePatientImageUpload(e.target);
+                });
+                
+                // Set up file upload handler
+                document.getElementById('audio_file').addEventListener('change', (e) => {
+                    if (audioRecorder) {
+                        audioRecorder.handleFileUpload(e.target);
+                    }
+                });
+            }
+            
+            handlePatientImageUpload(input) {
+                const file = input.files[0];
+                if (!file) return;
+                
+                // Show preview
+                this.showImagePreview(file);
+                
+                // Enable OCR button
+                const ocrBtn = document.querySelector('.ocr-btn');
+                ocrBtn.disabled = false;
+                ocrBtn.textContent = '🔍 Gegevens extraheren';
+            }
+            
+            showImagePreview(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    // Create preview element if it doesn't exist
+                    let preview = document.getElementById('image-preview');
+                    if (!preview) {
+                        preview = document.createElement('div');
+                        preview.id = 'image-preview';
+                        preview.style.cssText = `
+                            margin-top: 15px;
+                            text-align: center;
+                            padding: 15px;
+                            background: white;
+                            border-radius: 10px;
+                            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                        `;
+                        document.querySelector('.ocr-section').appendChild(preview);
+                    }
+                    
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" 
+                             style="max-width: 200px; max-height: 150px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                        <p style="margin-top: 10px; font-size: 14px; color: #666;">Afbeelding geladen - klaar voor OCR</p>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            showNotification(message, type = 'info') {
+                // Remove existing notifications
+                document.querySelectorAll('.notification').forEach(n => n.remove());
+                
+                const notification = document.createElement('div');
+                notification.className = `notification notification-${type}`;
+                notification.innerHTML = `
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.remove()" style="background: none; border: none; color: inherit; margin-left: 10px; cursor: pointer; font-weight: bold;">×</button>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+        }
+        
+        // Global functions
+        async function extractPatientInfo() {
+            const imageInput = document.getElementById('patient_image');
+            const file = imageInput.files[0];
+            
+            if (!file) {
+                enhancedInterface.showNotification('Selecteer eerst een afbeelding', 'error');
+                return;
+            }
+            
+            const ocrBtn = document.querySelector('.ocr-btn');
+            ocrBtn.disabled = true;
+            ocrBtn.innerHTML = '<span class="loading-spinner"></span> Extracting...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('patient_image', file);
+                
+                const response = await fetch('/api/extract-patient-id', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (result.patient_id) {
+                        document.getElementById('patient_id').value = result.patient_id;
+                        enhancedInterface.showNotification(`Patiënt ID gevonden: ${result.patient_id}`, 'success');
+                    }
+                    
+                    if (result.patient_dob) {
+                        // Convert to YYYY-MM-DD format for date input
+                        const dateParts = result.patient_dob.split('/');
+                        if (dateParts.length === 3) {
+                            const formattedDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`;
+                            document.getElementById('patient_dob').value = formattedDate;
+                            enhancedInterface.showNotification(`Geboortedatum gevonden: ${result.patient_dob}`, 'success');
+                        }
+                    }
+                    
+                    if (!result.patient_id && !result.patient_dob) {
+                        enhancedInterface.showNotification('Geen patiëntgegevens gevonden in afbeelding', 'info');
+                    }
+                } else {
+                    enhancedInterface.showNotification('Fout bij OCR: ' + result.error, 'error');
+                }
+                
+            } catch (error) {
+                enhancedInterface.showNotification('OCR fout: ' + error.message, 'error');
+            } finally {
+                ocrBtn.disabled = false;
+                ocrBtn.innerHTML = '🔍 Gegevens extraheren';
+            }
+        }
+        
+        async function uploadFile() {
+            const fileInput = document.getElementById('audio_file');
+            const file = fileInput.files[0];
+            const patientId = document.getElementById('patient_id').value;
+            const patientDob = document.getElementById('patient_dob').value;
+            
+            if (!file) {
+                enhancedInterface.showNotification('Selecteer eerst een audio bestand', 'error');
+                return;
+            }
+            
+            if (!patientId) {
+                enhancedInterface.showNotification('Patiënt ID is verplicht', 'error');
+                return;
+            }
+            
+            const uploadBtn = document.querySelector('.upload-btn');
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<span class="loading-spinner"></span> Uploading...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('audio_file', file);
+                formData.append('patient_id', patientId);
+                if (patientDob) {
+                    formData.append('patient_dob', patientDob);
+                }
+                
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    enhancedInterface.showNotification('Upload succesvol! Verwerking gestart...', 'success');
+                    
+                    // Redirect to review page after short delay
+                    setTimeout(() => {
+                        window.location.href = `/review/${result.job_id}`;
+                    }, 2000);
+                } else {
+                    enhancedInterface.showNotification('Upload fout: ' + result.error, 'error');
+                }
+                
+            } catch (error) {
+                enhancedInterface.showNotification('Upload fout: ' + error.message, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '🚀 Verwerken';
+            }
+        }
+        
+        // Initialize enhanced interface
+        let enhancedInterface;
+        document.addEventListener('DOMContentLoaded', () => {
+            enhancedInterface = new EnhancedInterface();
+        });
+    </script>
+</body>
+</html>
+
