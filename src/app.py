@@ -24,11 +24,23 @@ from openai import OpenAI
 #     from api.enhanced_api import enhanced_api
 #     from api.health import health_bp
 
+# Import knowledge API
+try:
+    from api.knowledge_api import knowledge_api, enhance_existing_transcription
+    KNOWLEDGE_API_AVAILABLE = True
+except ImportError:
+    KNOWLEDGE_API_AVAILABLE = False
+    print("Warning: Knowledge API not available")
+
 app = Flask(__name__)
 
 # Register enhanced API blueprint - temporarily disabled
 # app.register_blueprint(enhanced_api)
 # app.register_blueprint(health_bp)
+
+# Register knowledge API
+if KNOWLEDGE_API_AVAILABLE:
+    app.register_blueprint(knowledge_api)
 
 # Configure session with secure settings
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -698,6 +710,13 @@ def review_job(job_id):
         flash('Error loading job data', 'error')
         return redirect(url_for('index'))
 
+@app.route('/knowledge')
+@login_required
+def knowledge_base():
+    """Knowledge base management interface"""
+    user = get_current_user()
+    return render_template('knowledge_base.html', user=user)
+
 @app.route('/api/process', methods=['POST'])
 @login_required
 def process_audio():
@@ -748,6 +767,24 @@ def process_audio():
             
             # Generate medical report using GPT
             report_text = generate_medical_report(transcript_text, patient_id)
+            
+            # Enhance with knowledge system if available
+            if KNOWLEDGE_API_AVAILABLE:
+                try:
+                    enhancement = enhance_existing_transcription(transcript_text, patient_id)
+                    if enhancement.get('enhancement_applied'):
+                        # Use enhanced transcript for report generation
+                        enhanced_transcript = enhancement['enhanced_transcript']
+                        report_text = generate_medical_report(enhanced_transcript, patient_id)
+                        
+                        # Add drug information to report
+                        if enhancement.get('drug_corrections'):
+                            drug_info = "\n\nGEÏDENTIFICEERDE MEDICATIE:\n"
+                            for correction in enhancement['drug_corrections']:
+                                drug_info += f"- {correction['corrected']} (ATC: {correction['atc_code']})\n"
+                            report_text += drug_info
+                except Exception as e:
+                    logger.warning(f"Knowledge enhancement failed: {e}")
             
             # Store job data in database
             conn = sqlite3.connect(DATABASE_URL)

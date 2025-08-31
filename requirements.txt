@@ -26,3 +26,9 @@ bcrypt>=4.0.0
 # API client for Claude
 anthropic>=0.7.0
 
+# Knowledge system dependencies
+chromadb>=0.4.0
+beautifulsoup4>=4.12.0
+pandas>=2.0.0
+lxml>=4.9.0
+
