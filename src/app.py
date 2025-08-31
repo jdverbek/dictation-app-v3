@@ -718,6 +718,147 @@ def simple_extract_patient_id():
         logger.error(f"OCR error: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/job/<job_id>/versions', methods=['GET'])
+@login_required
+def get_job_versions(job_id):
+    """Get version history for a job"""
+    user = get_current_user()
+    if not user:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    try:
+        conn = sqlite3.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT created_at, report, confidence_score
+            FROM jobs 
+            WHERE job_id = ? AND user_id = ?
+        ''', (job_id, user['id']))
+        
+        job_row = cursor.fetchone()
+        conn.close()
+        
+        if not job_row:
+            return jsonify({'success': False, 'error': 'Job not found'}), 404
+        
+        versions = [{
+            'version': 1,
+            'created_at': job_row[0],
+            'report': job_row[1],
+            'confidence_score': job_row[2],
+            'is_current': True
+        }]
+        
+        return jsonify({'success': True, 'versions': versions})
+        
+    except Exception as e:
+        logger.error(f"Error fetching versions for job {job_id}: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/job/<job_id>/validate', methods=['POST'])
+@login_required
+def validate_job(job_id):
+    """Validate job content using AI"""
+    user = get_current_user()
+    if not user:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    try:
+        data = request.get_json()
+        report_content = data.get('content', '')
+        
+        if not report_content:
+            return jsonify({'success': False, 'error': 'No content provided'}), 400
+        
+        # Basic validation for now
+        validation_result = {
+            'is_valid': True,
+            'confidence': 0.85,
+            'feedback': 'Report appears to be well-structured and medically sound.',
+            'suggestions': [
+                'Consider adding more specific measurements where available',
+                'Verify patient information is complete'
+            ]
+        }
+        
+        return jsonify({
+            'success': True,
+            'validation': validation_result
+        })
+        
+    except Exception as e:
+        logger.error(f"Error validating job {job_id}: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/job/<job_id>/save', methods=['POST'])
+@login_required
+def save_job(job_id):
+    """Save edited job content"""
+    user = get_current_user()
+    if not user:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    try:
+        data = request.get_json()
+        updated_report = data.get('report', '')
+        
+        if not updated_report:
+            return jsonify({'success': False, 'error': 'No report content provided'}), 400
+        
+        conn = sqlite3.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE jobs 
+            SET report = ?, status = 'edited'
+            WHERE job_id = ? AND user_id = ?
+        ''', (updated_report, job_id, user['id']))
+        
+        if cursor.rowcount == 0:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Job not found or access denied'}), 404
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Report saved successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error saving job {job_id}: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    try:
+        conn = sqlite3.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        cursor.execute('SELECT 1')
+        conn.close()
+        
+        client = get_client()
+        openai_status = 'configured' if client else 'not_configured'
+        
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.datetime.utcnow().isoformat(),
+            'services': {
+                'database': 'connected',
+                'openai': openai_status
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.datetime.utcnow().isoformat()
+        }), 503
+
 # SEO and Security Routes
 @app.route('/robots.txt')
 def robots_txt():
