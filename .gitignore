@@ -1,8 +1,3 @@
-# Environment
-.env
-.env.local
-.env.production
-
 # Python
 __pycache__/
 *.py[cod]
@@ -26,61 +21,29 @@ wheels/
 *.egg
 MANIFEST
 
-# Flask
-instance/
-.webassets-cache
-
-# Audio files
-*.wav
-*.mp3
-*.webm
-*.m4a
-*.aac
-*.flac
-uploads/
-recordings/
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
 # OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
-# Logs
+# Local development
+.env
 *.log
-logs/
+*.db
+*.sqlite3
 
-# Testing
-.coverage
-.pytest_cache/
-.tox/
-.nox/
-htmlcov/
-
-# Documentation
-docs/_build/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# Environments
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
+# Uploads
+uploads/
+temp/
