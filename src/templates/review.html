@@ -454,24 +454,24 @@
         <div class="header">
             <div class="patient-info">
                 <div class="patient-details">
-                    <div>👤 Patient ID: <span id="patient-id">{{ patient_id }}</span></div>
-                    <div>📅 Geboortedatum: <span id="patient-dob">{{ patient_dob }}</span></div>
-                    <div>🕐 Verwerkt: <span id="process-time">{{ process_time }}</span></div>
-                    <div>🔄 Iteraties: <span id="iterations">{{ iterations }}</span>/5</div>
+                    <div>👤 Patient ID: <span id="patient-id">{{ job.patient_id }}</span></div>
+                    <div>📅 Geboortedatum: <span id="patient-dob">{{ job.patient_dob or 'Niet opgegeven' }}</span></div>
+                    <div>🕐 Verwerkt: <span id="process-time">{{ job.created_at }}</span></div>
+                    <div>🔄 Status: <span id="status">{{ job.status }}</span></div>
                 </div>
-                <div class="status-badge status-{{ status }}">
-                    {{ status|upper }}
+                <div class="status-badge status-{{ job.status }}">
+                    {{ job.status|upper }}
                 </div>
             </div>
             
             <div class="confidence-meter">
                 <div class="confidence-header">
                     <span class="confidence-label">🎯 Betrouwbaarheidsscore</span>
-                    <span class="confidence-value" id="confidence-value">{{ confidence }}%</span>
+                    <span class="confidence-value" id="confidence-value">{{ (job.confidence_score * 100)|round|int }}%</span>
                 </div>
                 <div class="confidence-bar">
-                    <div class="confidence-fill" style="width: {{ confidence }}%">
-                        {{ confidence }}%
+                    <div class="confidence-fill" style="width: {{ (job.confidence_score * 100)|round|int }}%">
+                        {{ (job.confidence_score * 100)|round|int }}%
                     </div>
                 </div>
                 <div style="margin-top: 10px; font-size: 12px; color: #666;">
@@ -488,7 +488,7 @@
                     📝 Originele Transcriptie
                 </h2>
                 <div class="transcript-box" id="original-transcript">
-                    {{ transcript }}
+                    {{ job.transcript or 'Geen transcript beschikbaar' }}
                 </div>
                 
                 <div class="verification-details">
@@ -534,7 +534,7 @@
                     class="editable-report"
                     spellcheck="false"
                     placeholder="Het gestructureerde verslag wordt hier weergegeven..."
-                >{{ structured_report }}</textarea>
+                >{{ job.report or 'Geen rapport beschikbaar' }}</textarea>
                 
                 <div class="version-history">
                     <h4>📚 Versiegeschiedenis</h4>
@@ -880,7 +880,7 @@ Betrouwbaarheidsscore: ${document.getElementById('confidence-value').textContent
         // Initialize when page loads
         let reviewer;
         document.addEventListener('DOMContentLoaded', () => {
-            reviewer = new ReportReviewer('{{ job_id }}');
+            reviewer = new ReportReviewer('{{ job.job_id }}');
         });
         
         // Global functions for buttons
