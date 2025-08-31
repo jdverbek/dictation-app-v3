@@ -12,12 +12,22 @@ from flask import Flask, request, render_template, redirect, url_for, jsonify, s
 from openai import OpenAI
 
 # Import enhanced API
-from api.enhanced_api import enhanced_api
+try:
+    from api.enhanced_api import enhanced_api
+    from api.health import health_bp
+except ImportError:
+    # Fallback for deployment environments
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    from api.enhanced_api import enhanced_api
+    from api.health import health_bp
 
 app = Flask(__name__)
 
 # Register enhanced API blueprint
 app.register_blueprint(enhanced_api)
+app.register_blueprint(health_bp)
 
 # Configure session with secure settings
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
