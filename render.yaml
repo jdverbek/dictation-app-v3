@@ -19,7 +19,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false
       - key: CLAUDE_API_KEY
-        value: CLAUDE_API_KEY_PLACEHOLDER
+        sync: false
       - key: REDIS_URL
         fromService:
           type: redis
