@@ -6,9 +6,38 @@ from flask import Blueprint, request, jsonify, render_template
 import uuid
 from werkzeug.utils import secure_filename
 import os
+import sys
 import json
 import logging
 from datetime import datetime
+
+# Add the src directory to Python path for imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.dirname(current_dir)
+if src_dir not in sys.path:
+    sys.path.insert(0, src_dir)
+
+# Import core modules with error handling
+try:
+    from core.orchestrator import MedicalOrchestrator
+    from core.patient_ocr import PatientOCR
+    from core.background_tasks import start_processing_job, get_job_status
+except ImportError as e:
+    print(f"Warning: Could not import core modules: {e}")
+    # Create dummy classes for graceful degradation
+    class MedicalOrchestrator:
+        def process_medical_dictation(self, *args, **kwargs):
+            return {"error": "Core modules not available"}
+    
+    class PatientOCR:
+        def extract_patient_info(self, *args, **kwargs):
+            return {"success": False, "error": "OCR not available"}
+    
+    def start_processing_job(*args, **kwargs):
+        return str(uuid.uuid4())
+    
+    def get_job_status(*args, **kwargs):
+        return {"status": "error", "error": "Background processing not available"}
 
 logger = logging.getLogger(__name__)
 

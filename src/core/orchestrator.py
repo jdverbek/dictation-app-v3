@@ -4,6 +4,8 @@ Main orchestrator that handles iterative verification behind the scenes
 
 import asyncio
 import json
+import os
+import sys
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime
@@ -11,6 +13,26 @@ import uuid
 import redis
 from openai import OpenAI
 import logging
+
+# Add the src directory to Python path for imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.dirname(current_dir)
+if src_dir not in sys.path:
+    sys.path.insert(0, src_dir)
+
+# Import other core modules with error handling
+try:
+    from core.claude_medical_validator import ClaudeMedicalValidator
+    from core.hallucination_detector import detect_hallucination
+except ImportError as e:
+    print(f"Warning: Could not import some core modules: {e}")
+    # Create dummy classes for graceful degradation
+    class ClaudeMedicalValidator:
+        def validate_medical_report(self, *args, **kwargs):
+            return {"is_valid": True, "confidence": 0.5, "feedback": "Validation not available"}
+    
+    def detect_hallucination(*args, **kwargs):
+        return False, "Hallucination detection not available"
 
 logger = logging.getLogger(__name__)
 

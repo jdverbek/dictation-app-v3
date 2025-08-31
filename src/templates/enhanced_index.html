@@ -665,8 +665,8 @@
                         }
                     }
                     
-                    if (!result.patient_id && !result.patient_dob) {
-                        enhancedInterface.showNotification('Geen patiëntgegevens gevonden in afbeelding', 'info');
+                    if (result.message) {
+                        enhancedInterface.showNotification(result.message, 'info');
                     }
                 } else {
                     enhancedInterface.showNotification('Fout bij OCR: ' + result.error, 'error');
@@ -716,7 +716,12 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    enhancedInterface.showNotification('Upload succesvol! Verwerking gestart...', 'success');
+                    enhancedInterface.showNotification(`Upload succesvol! Job ID: ${result.job_id}`, 'success');
+                    
+                    // Automatically redirect to review page after a short delay
+                    setTimeout(() => {
+                        window.location.href = `/review/${result.job_id}`;
+                    }, 2000);
                     
                     // Redirect to review page after short delay
                     setTimeout(() => {
