@@ -768,7 +768,8 @@ def process_audio():
             # Generate medical report using GPT
             report_text = generate_medical_report(transcript_text, patient_id)
             
-            # Enhance with multi-agent system
+            # Enhance with multi-agent system (optional)
+            enhanced_transcript = transcript_text
             try:
                 from core.multi_agent_orchestrator import get_multi_agent_orchestrator
                 from core.contextual_drug_selector import DrugContext
@@ -796,18 +797,20 @@ def process_audio():
                 )
                 
                 # Use enhanced transcript if improvements were made
-                if multi_agent_result['total_improvements'] > 0:
+                if multi_agent_result.get('total_improvements', 0) > 0:
                     enhanced_transcript = multi_agent_result['final_transcript']
                     report_text = generate_medical_report(enhanced_transcript, patient_id)
                     
                     # Add agent feedback to report
-                    agent_feedback = multi_agent_result['agent_feedback']
-                    report_text += f"\n\n--- SYSTEEM VERWERKING ---\n{agent_feedback}"
+                    agent_feedback = multi_agent_result.get('agent_feedback', '')
+                    if agent_feedback:
+                        report_text += f"\n\n--- SYSTEEM VERWERKING ---\n{agent_feedback}"
                     
-                    logger.info(f"Multi-agent processing: {multi_agent_result['total_improvements']} improvements, {multi_agent_result['final_confidence']:.2%} confidence")
-                else:
-                    enhanced_transcript = transcript_text
+                    logger.info(f"Multi-agent processing: {multi_agent_result.get('total_improvements', 0)} improvements, {multi_agent_result.get('final_confidence', 0):.2%} confidence")
                     
+            except ImportError as e:
+                logger.warning(f"Multi-agent system not available: {e}")
+                enhanced_transcript = transcript_text
             except Exception as e:
                 logger.warning(f"Multi-agent processing failed: {e}")
                 enhanced_transcript = transcript_text
