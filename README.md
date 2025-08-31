@@ -1,49 +1,44 @@
-# 🩺 Medical Dictation App
+# 🏥 Enhanced Medical Dictation App v3.0
 
-An intelligent medical dictation application that transforms audio recordings into structured medical reports with advanced AI analysis.
+> **Revolutionary AI-powered medical transcription with Claude Opus validation, intelligent self-correction, and comprehensive workflow automation**
 
-## 🚀 Quick Start
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-2.3+-green.svg)](https://flask.palletsprojects.com)
+[![Claude Opus](https://img.shields.io/badge/Claude-Opus-purple.svg)](https://anthropic.com)
+[![OpenAI](https://img.shields.io/badge/OpenAI-Whisper-orange.svg)](https://openai.com)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-### Enhanced Version (Recommended)
-```bash
-# Clone the repository
-git clone <your-repo-url>
-cd jdverbek-dictation-app
+## 🚀 **What's New in v3.0**
 
-# Set up environment
-cp .env.example .env
-# Edit .env with your OpenAI API key
+### 🧠 **AI-Powered Intelligence**
+- **Claude Opus Medical Validation**: Sophisticated medical reasoning and terminology validation
+- **Intelligent Self-Correction**: Automatic iterative verification with up to 5 improvement cycles
+- **Multi-Agent Verification**: Advanced hallucination detection and quality assurance
+- **Confidence Scoring**: Real-time quality metrics and validation scores
 
-# Install dependencies
-pip install -r requirements.txt
+### 📷 **Advanced OCR System**
+- **Patient ID Recognition**: Automatic extraction from wristbands and medical cards
+- **Smart Image Processing**: Advanced preprocessing with OpenCV
+- **Dutch Medical Standards**: Optimized for Dutch healthcare ID formats
+- **Error Correction**: Intelligent validation and auto-correction
 
-# Run the enhanced application
-python src/app.py
-```
+### ⚡ **Background Processing**
+- **Celery + Redis**: Scalable asynchronous processing architecture
+- **Real-time Status**: Live job tracking and progress updates
+- **Health Monitoring**: Automatic service health checks and cleanup
+- **Worker Scaling**: Horizontal scaling support for high-volume processing
 
-### Legacy Version
-For the original version, see [legacy/README_LEGACY.md](legacy/README_LEGACY.md)
+### 🎤 **Enhanced Audio**
+- **WebM Support**: Modern audio format with automatic fallback
+- **Auto-Download**: Seamless recording download and processing
+- **Session Recovery**: Persistent storage for interrupted sessions
+- **Quality Optimization**: Enhanced audio processing for medical dictation
 
-## 🆕 Enhanced Features
-
-### Two-Part Raadpleging Flow
-1. **🧠 Smart History Collection (Anamnese)**
-   - Intelligent conversation analysis
-   - Automatic symptom detection and correlation
-   - Smarter than average physician in identifying relevant details
-   - Extracts reason for encounter in concise format
-
-2. **🔬 Structured Clinical Examination (Onderzoek)**
-   - Intuitive dictation for technical investigations
-   - Structured templates for ECG, TTE, exercise tests, etc.
-   - Smart template filling with fixed order maintenance
-   - Removes incomplete sentences when measurements not provided
-
-### 🛡️ Safety Features
-- **NEVER fabricates data** - Only extracts explicitly mentioned information
-- Source validation for all extracted data
-- Confidence scoring for reliability assessment
-- Range validation for medical measurements
+### 📝 **Comprehensive Review Interface**
+- **Side-by-Side Editing**: Transcript and report comparison view
+- **Version History**: Complete audit trail with auto-save
+- **Real-time Validation**: Live Claude Opus feedback during editing
+- **Export Functionality**: Multiple format support with confidence metrics
 
 ## 📋 Supported Investigation Types
 
