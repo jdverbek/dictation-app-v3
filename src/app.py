@@ -661,19 +661,42 @@ def review_job(job_id):
     if not user:
         return redirect(url_for('login'))
     
-    # For now, create a simple review interface
-    # In production, this would fetch actual job data
-    job_data = {
-        'job_id': job_id,
-        'status': 'completed',
-        'patient_id': 'Sample Patient',
-        'transcript': 'Sample transcript would appear here...',
-        'report': 'Sample medical report would appear here...',
-        'created_at': '2025-08-31 12:00:00',
-        'confidence_score': 0.85
-    }
-    
-    return render_template('review.html', job=job_data, user=user)
+    # Fetch real job data from database
+    try:
+        conn = sqlite3.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT job_id, patient_id, patient_dob, transcript, report, status, confidence_score, created_at
+            FROM jobs 
+            WHERE job_id = ? AND user_id = ?
+        ''', (job_id, user['id']))
+        
+        job_row = cursor.fetchone()
+        conn.close()
+        
+        if not job_row:
+            flash('Job not found or access denied', 'error')
+            return redirect(url_for('index'))
+        
+        # Convert to dictionary
+        job_data = {
+            'job_id': job_row[0],
+            'patient_id': job_row[1],
+            'patient_dob': job_row[2],
+            'transcript': job_row[3],
+            'report': job_row[4],
+            'status': job_row[5],
+            'confidence_score': job_row[6],
+            'created_at': job_row[7]
+        }
+        
+        return render_template('review.html', job=job_data, user=user)
+        
+    except Exception as e:
+        logger.error(f"Error fetching job {job_id}: {str(e)}")
+        flash('Error loading job data', 'error')
+        return redirect(url_for('index'))
 
 @app.route('/api/process', methods=['POST'])
 @login_required
